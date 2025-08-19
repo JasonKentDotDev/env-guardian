@@ -7,7 +7,7 @@ Helps you keep sensitive values out of source code and organized into a `.env` f
 
 ## Features
 
-- Detects existing `process.env.*` usage in `.ts` and `.js` files  
+- Detects existing `process.env.*` usage in `.ts`, `.js`, `.tsx`, and `.jsx` files  
 - Suggests likely environment variables from hardcoded values (keys, secrets, tokens, passwords, URLs, etc.)  
 - Highlights results:
   - ✅ Existing variables in **green**
