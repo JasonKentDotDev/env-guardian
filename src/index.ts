@@ -79,12 +79,7 @@ export function scanForEnv(dir: string) {
       continue;
     }
 
-    if (
-      !entry.name.endsWith(".ts") 
-      && !entry.name.endsWith(".js")
-      && !entry.name.endsWith(".tsx")
-      && !entry.name.endsWith(".jsx")
-    ) continue;
+    if (!/\.(ts|tsx|js|jsx)$/.test(entry.name)) continue;
 
     const fullPath = path.join(dir, entry.name);
     const content = fs.readFileSync(fullPath, "utf-8");
