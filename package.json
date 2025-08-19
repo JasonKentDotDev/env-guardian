@@ -1,0 +1,32 @@
+{
+  "name": "env-guardian",
+  "version": "1.0.0",
+  "description": "A CLI tool to manage environment variables with a focus on security and ease of use.",
+  "main": "index.js",
+  "bin": {
+    "env-guardian": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "ts-node src/cli.ts",
+    "clean": "del dist"
+  },
+  "keywords": [
+    "environment",
+    "variables",
+    "cli",
+    "security",
+    "management",
+    "env"
+  ],
+  "author": "Jason Kent <jasonkent.dev@gmail.com>",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "@types/node": "^24.3.0",
+    "chalk": "^5.6.0",
+    "commander": "^14.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.2"
+  }
+}
