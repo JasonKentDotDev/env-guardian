@@ -7,6 +7,9 @@
   "bin": {
     "env-guardian": "dist/cli.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
     "start": "ts-node dist/cli.js",
