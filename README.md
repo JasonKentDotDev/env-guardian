@@ -21,3 +21,23 @@ Helps you keep sensitive values out of source code and organized into a `.env` f
 
 ```bash
 npm install -g @jkdd/env-guardian
+```
+
+---
+
+## Usage
+
+```bash
+## Run scan
+env-guardian scan ./src
+
+# Results
+Environment Variable Report:
+
+Existing Environment Variables:
+✔ VAR_NAME (used in: Home.tsx)
+
+⚠ Suggested Environment Variables:
+secret (found in: File.tsx)
+apiKey (found in: config.js)
+```
