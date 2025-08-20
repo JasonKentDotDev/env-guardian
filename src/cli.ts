@@ -10,7 +10,7 @@ const program = new Command();
 program
   .name("@jkdd/env-guardian")
   .description("Scan your project for environment variable usage and candidates")
-  .version("1.0.3");
+  .version("1.0.4");
 
 program
   .command("scan")
@@ -50,16 +50,16 @@ program
       console.log();
     }
 
-    if (options.createEnv) {
-      const envPath = ".env";
+    if (options.toEnv) {
+      const envPath = path.join(process.cwd(), ".env"); // always root folder
       let existingContent = "";
       if (fs.existsSync(envPath)) {
         existingContent = fs.readFileSync(envPath, "utf-8");
       }
 
       const newSuggestions = Object.entries(results)
-        .filter(([key, entry]) => entry.suggested && !existingContent.includes(`${key}`))
-        .map(([key]) => `${key}`);
+        .filter(([key, entry]) => entry.suggested && !existingContent.includes(`${key}=`))
+        .map(([key]) => `${key}=`);
 
       if (newSuggestions.length > 0) {
         const envComment = "\n\n# Suggested by env-guardian\n";
