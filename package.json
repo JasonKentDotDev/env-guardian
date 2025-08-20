@@ -1,6 +1,6 @@
 {
   "name": "env-guardian",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A CLI tool to manage environment variables with a focus on security and ease of use.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
