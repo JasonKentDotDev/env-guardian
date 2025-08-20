@@ -8,7 +8,7 @@ import path from "path";
 const program = new Command();
 
 program
-  .name("env-guardian")
+  .name("@jkdd/env-guardian")
   .description("Scan your project for environment variable usage and candidates")
   .version("1.0.1");
 

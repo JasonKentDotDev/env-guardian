@@ -1,4 +1,4 @@
-# env-guardian
+# @jkdd/env-guardian
 
 🔍 A simple CLI tool to scan your project for **environment variable usage** and **secret-like candidates**.  
 Helps you keep sensitive values out of source code and organized into a `.env` file.
@@ -20,4 +20,4 @@ Helps you keep sensitive values out of source code and organized into a `.env` f
 ## Installation
 
 ```bash
-npm install -g env-guardian
+npm install -g @jkdd/env-guardian
