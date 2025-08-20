@@ -11,3 +11,6 @@ yarn-error.log*
 
 # OS files
 .DS_Store
+
+# Testing files
+test/
