@@ -14,6 +14,8 @@ Helps you keep sensitive values out of source code and organized into a `.env` f
   - ⚠ Suggested candidates in **yellow**
 - Optional `.env` integration with `--to-env` option:
   - Appends suggested keys to `.env` with a `# Suggested by env-guardian` marker
+  - Option may have user defined filename added as well, `--to-env .env.local`
+  - Any file creation or manipulation will happen in the project's root folder
 
 ---
 
@@ -47,7 +49,9 @@ apiKey (found in: config.js)
 
 ```bash
 # Run scan with option to create or append suggestions to a .env file
-env-guardian scan ./src --to-env
+env-guardian scan ./src --to-env # defaults to .env in root folder
+# or
+env-guardian scan ./src --to-env .env.local # uses user defined filename in root folder
 
 # Results
 Environment Variable Report:
@@ -59,7 +63,7 @@ Existing Environment Variables:
 secret (found in: File.tsx)
 apiKey (found in: config.js)
 
-✨ Added 2 suggestion(s) to .env
+✨ Added 2 suggestion(s) to .env # or ex: .env.local
 ```
 
 If you run the command again, it will not duplicate additions
@@ -75,5 +79,5 @@ Existing Environment Variables:
 secret (found in: File.tsx)
 apiKey (found in: config.js)
 
-No new suggestions to add to .env
+No new suggestions to add to .env # or ex: .env.local
 ```
