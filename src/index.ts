@@ -8,6 +8,10 @@ export interface EnvScanResultEntry {
 
 export type EnvScanResult = Record<string, EnvScanResultEntry>;
 
+/**
+ * Ignored Directories if scanning root folder
+ * New suggestions are welcome for various projects
+ */ 
 const IGNORE_DIRS = new Set(["node_modules", ".git", "dist", "build", ".next"]);
 
 function stripComments(src: string) {
@@ -16,7 +20,13 @@ function stripComments(src: string) {
     .replace(/\/\/.*$/gm, "");        // line comments
 }
 
+/** Helps split variable names to help in identifying sensitive variables
+ * camelCase   ->  camel case
+ * snake_case  ->  snake case
+ * kebab-case  ->  kebab case
+ */
 function splitIdentifier(name: string): string[] {
+  // Split identifier into words based on common patterns
   return name
     .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
     .split(/[\s_\-]+/)
@@ -24,6 +34,10 @@ function splitIdentifier(name: string): string[] {
     .filter(Boolean);
 }
 
+/**
+ * Check if the variable name contains any sensitive keywords
+ * This is a basic heuristic and can be extended based on project needs
+ */
 function looksSensitiveName(name: string): boolean {
   const sensitive = [
     "secret","token","key","password","passwd","pwd",
@@ -34,20 +48,25 @@ function looksSensitiveName(name: string): boolean {
   return words.some(w => sensitive.includes(w));
 }
 
-// Only evaluate string literals (quotes must match)
+/**
+ * Only evaluate string literals (quotes must match)
+ */
 function extractStringLiteral(raw: string): string | null {
   const t = raw.trim();
   const m = t.match(/^(['"`])(.*)\1$/s);
   return m ? m[2] : null; // inner content w/o quotes
 }
 
+/**
+ * Check if a string literal looks like a secret or sensitive value
+ */
 function looksLikeSecretLiteral(str: string): boolean {
   const noSpace = !/\s/.test(str);
 
   // jwt-like
   if (/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/.test(str)) return true;
 
-  // obvious API keys / long tokens
+  // obvious API keys/long tokens
   const longMixed =
     str.length >= 20 &&
     [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter(r => r.test(str)).length >= 2 &&
@@ -63,6 +82,9 @@ function looksLikeSecretLiteral(str: string): boolean {
   return false;
 }
 
+/**
+ * Directory to scan for environment variable usage and candidates
+ */
 export function scanForEnv(dir: string): EnvScanResult {
   const result: EnvScanResult = {};
   const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -85,7 +107,7 @@ export function scanForEnv(dir: string): EnvScanResult {
     const content = fs.readFileSync(fullPath, "utf-8");
     const code = stripComments(content);
 
-    // 1) Existing usage: process.env.VAR_NAME
+    // Existing usage: process.env.VAR_NAME
     for (const m of code.matchAll(/process\.env\.([A-Z0-9_]+)/g)) {
       const varName = m[1];
       if (!result[varName]) result[varName] = { usage: [], suggested: [] };
@@ -94,7 +116,7 @@ export function scanForEnv(dir: string): EnvScanResult {
         }
     }
 
-    // 2) Candidates: const/let/var NAME = <initializer>;
+    // Candidates: const/let/var name = <initializer>
     const candidateRegex = /(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([^;]+)/g;
     let m: RegExpExecArray | null;
     while ((m = candidateRegex.exec(code))) {
@@ -104,10 +126,12 @@ export function scanForEnv(dir: string): EnvScanResult {
       // if already used as env, skip suggesting
       if (result[key]?.usage.length) continue;
 
+      // Senditivity check
       const nameSensitive = looksSensitiveName(key);
       const literal = extractStringLiteral(initializer);
       const valueSensitive = literal ? looksLikeSecretLiteral(literal) : false;
 
+      // If either name or value looks sensitive, suggest it as a candidate
       if (nameSensitive || valueSensitive) {
         !result[key] ? result[key] = { usage: [], suggested: [] } : result[key].suggested.push(fullPath);
 
