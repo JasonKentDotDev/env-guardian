@@ -26,7 +26,7 @@ npm install -g @jkdd/env-guardian
 ---
 
 ## Usage
-# Scan
+### Scan
 
 ```bash
 # Run scan
@@ -43,7 +43,7 @@ secret (found in: File.tsx)
 apiKey (found in: config.js)
 ```
 
-# Options
+### Options
 
 ```bash
 # Run scan with option to create or append suggestions to a .env file
@@ -61,7 +61,9 @@ apiKey (found in: config.js)
 
 ✨ Added 2 suggestion(s) to .env
 ```
+
 If you run the command again, it will not duplicate additions
+
 ```bash
 # Results
 Environment Variable Report:
