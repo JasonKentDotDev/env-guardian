@@ -15,7 +15,8 @@ program
 program
   .command("scan")
   .argument("<dir>", "directory to scan")
-  .option("--to-env", "create or append suggestions to .env file")
+  // Optional value for --to-env; defaults to ".env" if not specified
+  .option("--to-env [name]", "create or append suggestions to user defined .env file (default: .env)")
   .action((dir, options) => {
     const results = scanForEnv(dir);
 
@@ -38,12 +39,14 @@ program
       }
     }
 
+    // If there are existing variables detected, this section will print
     if (existing.length > 0) {
       console.log(chalk.bold.green("Existing Environment Variables:"));
       console.log(existing.join("\n"));
       console.log();
     }
 
+    // If there are suggestions detected, this section will print
     if (suggestions.length > 0) {
       console.log(chalk.bold.yellow("⚠ Suggested Environment Variables:"));
       console.log(suggestions.join("\n"));
@@ -51,7 +54,9 @@ program
     }
 
     if (options.toEnv) {
-      const envPath = path.join(process.cwd(), ".env"); // always root folder
+      const envFile = typeof options.toEnv === "string" ? options.toEnv : ".env"; // If user just wrote --to-env, file will default to ".env"
+      const envPath = path.join(process.cwd(), envFile); // always root folder and user defined name (.env.local, .env.production, etc.)
+
       let existingContent = "";
       if (fs.existsSync(envPath)) {
         existingContent = fs.readFileSync(envPath, "utf-8");
@@ -62,11 +67,13 @@ program
         .map(([key]) => `${key}=`);
 
       if (newSuggestions.length > 0) {
+        // Append new suggestions to the defined .env file
         const envComment = "\n\n# Suggested by env-guardian\n";
         fs.appendFileSync(envPath, envComment + newSuggestions.join("\n") + "\n");
-        console.log(chalk.yellow(`✨ Added ${newSuggestions.length} suggestion(s) to .env`));
+        console.log(chalk.yellow(`✨ Added ${newSuggestions.length} suggestion(s) to ${envFile}`));
       } else {
-        console.log(chalk.gray("No new suggestions to add to .env"));
+        // All suggestions already exist in the file
+        console.log(chalk.gray(`No new suggestions to add to ${envFile}`));
       }
     }
   });
