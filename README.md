@@ -12,7 +12,7 @@ Helps you keep sensitive values out of source code and organized into a `.env` f
 - Highlights results:
   - ✅ Existing variables in **green**
   - ⚠ Suggested candidates in **yellow**
-- Optional `.env` integration:
+- Optional `.env` integration with `--to-env` option:
   - Appends suggested keys to `.env` with a `# Suggested by env-guardian` marker
 
 ---
