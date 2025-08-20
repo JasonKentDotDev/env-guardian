@@ -30,8 +30,11 @@ program
           chalk.green(`✔ ${key}`) +
             ` (used in: ${entry.usage.map((f) => path.relative(dir, f)).join(", ")})`
         );
-      } else if (entry.suggested) {
-        suggestions.push(chalk.yellow(`${key} (candidate)`));
+      } else if (entry.suggested.length > 0) {
+        suggestions.push(
+          chalk.yellow(`${key}`) + 
+            ` (found in: ${entry.suggested.map((f) => path.relative(dir, f)).join(", ")})`
+        );
       }
     }
 
@@ -55,8 +58,8 @@ program
       }
 
       const newSuggestions = Object.entries(results)
-        .filter(([key, entry]) => entry.suggested && !existingContent.includes(`${key}=`))
-        .map(([key]) => `${key}=`);
+        .filter(([key, entry]) => entry.suggested && !existingContent.includes(`${key}`))
+        .map(([key]) => `${key}`);
 
       if (newSuggestions.length > 0) {
         const envComment = "\n\n# Suggested by env-guardian\n";

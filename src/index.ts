@@ -3,7 +3,7 @@ import path from "path";
 
 export interface EnvScanResultEntry {
   usage: string[];
-  suggested: boolean;
+  suggested: string[];
 }
 
 export type EnvScanResult = Record<string, EnvScanResultEntry>;
@@ -63,8 +63,8 @@ function looksLikeSecretLiteral(str: string): boolean {
   return false;
 }
 
-export function scanForEnv(dir: string) {
-  const result: Record<string, { usage: string[]; suggested: boolean }> = {};
+export function scanForEnv(dir: string): EnvScanResult {
+  const result: EnvScanResult = {};
   const entries = fs.readdirSync(dir, { withFileTypes: true });
 
   for (const entry of entries) {
@@ -72,9 +72,9 @@ export function scanForEnv(dir: string) {
       if (IGNORE_DIRS.has(entry.name)) continue;
       const nested = scanForEnv(path.join(dir, entry.name));
       for (const k in nested) {
-        if (!result[k]) result[k] = { usage: [], suggested: false };
+        if (!result[k]) result[k] = { usage: [], suggested: [] };
         result[k].usage.push(...nested[k].usage);
-        result[k].suggested ||= nested[k].suggested;
+        result[k].suggested.push(...nested[k].suggested);
       }
       continue;
     }
@@ -88,8 +88,10 @@ export function scanForEnv(dir: string) {
     // 1) Existing usage: process.env.VAR_NAME
     for (const m of code.matchAll(/process\.env\.([A-Z0-9_]+)/g)) {
       const varName = m[1];
-      if (!result[varName]) result[varName] = { usage: [], suggested: false };
-      result[varName].usage.push(fullPath);
+      if (!result[varName]) result[varName] = { usage: [], suggested: [] };
+        if (!result[varName].usage.includes(fullPath)) {
+          result[varName].usage.push(fullPath);
+        }
     }
 
     // 2) Candidates: const/let/var NAME = <initializer>;
@@ -107,8 +109,11 @@ export function scanForEnv(dir: string) {
       const valueSensitive = literal ? looksLikeSecretLiteral(literal) : false;
 
       if (nameSensitive || valueSensitive) {
-        if (!result[key]) result[key] = { usage: [], suggested: true };
-        else result[key].suggested = true;
+        !result[key] ? result[key] = { usage: [], suggested: [] } : result[key].suggested.push(fullPath);
+
+        if (!result[key].suggested.includes(fullPath)) {
+          result[key].suggested.push(fullPath);
+        }
       }
     }
   }
