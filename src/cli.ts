@@ -10,7 +10,7 @@ const program = new Command();
 program
   .name("@jkdd/env-guardian")
   .description("Scan your project for environment variable usage and candidates")
-  .version("1.0.6");
+  .version("1.0.7");
 
 program
   .command("scan")

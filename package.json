@@ -1,6 +1,6 @@
 {
   "name": "@jkdd/env-guardian",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "A CLI tool to scan and manage environment variables with a focus on security and ease of use.",
   "publishConfig": {
     "access": "public"
@@ -33,12 +33,12 @@
   "type": "commonjs",
   "repository": {
     "type": "git",
-    "url": "https://github.com/JasonK97/env-guardian.git"
+    "url": "https://github.com/JasonKentDotDev/env-guardian.git"
   },
   "bugs": {
-    "url": "https://github.com/JasonK97/env-guardian/issues"
+    "url": "https://github.com/JasonKentDotDev/env-guardian/issues"
   },
-  "homepage": "https://github.com/JasonK97/env-guardian#readme",
+  "homepage": "https://github.com/JasonKentDotDev/env-guardian#readme",
   "dependencies": {
     "chalk": "^5.6.0",
     "commander": "^14.0.0"
