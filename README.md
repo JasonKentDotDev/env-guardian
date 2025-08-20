@@ -27,7 +27,7 @@ npm install -g @jkdd/env-guardian
 
 ## Usage
 
-```bash
+```diff
 ## Run scan
 env-guardian scan ./src
 
@@ -35,9 +35,9 @@ env-guardian scan ./src
 Environment Variable Report:
 
 Existing Environment Variables:
-✔ VAR_NAME (used in: Home.tsx)
++ ✔ VAR_NAME (used in: Home.tsx)
 
 ⚠ Suggested Environment Variables:
-secret (found in: File.tsx)
-apiKey (found in: config.js)
+- secret (found in: File.tsx)
+- apiKey (found in: config.js)
 ```
