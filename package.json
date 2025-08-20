@@ -13,7 +13,7 @@
   "scripts": {
     "build": "tsc",
     "start": "ts-node src/cli.ts",
-    "clean": "del dist",
+    "clean": "rimraf dist",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
