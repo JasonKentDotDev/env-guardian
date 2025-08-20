@@ -26,18 +26,52 @@ npm install -g @jkdd/env-guardian
 ---
 
 ## Usage
+# Scan
 
-```diff
-## Run scan
+```bash
+# Run scan
 env-guardian scan ./src
 
 # Results
 Environment Variable Report:
 
 Existing Environment Variables:
-+ ✔ VAR_NAME (used in: Home.tsx)
+✔ VAR_NAME (used in: Home.tsx)
 
 ⚠ Suggested Environment Variables:
-- secret (found in: File.tsx)
-- apiKey (found in: config.js)
+secret (found in: File.tsx)
+apiKey (found in: config.js)
+```
+
+# Options
+
+```bash
+# Run scan with option to create or append suggestions to a .env file
+env-guardian scan ./src --to-env
+
+# Results
+Environment Variable Report:
+
+Existing Environment Variables:
+✔ VAR_NAME (used in: Home.tsx)
+
+⚠ Suggested Environment Variables:
+secret (found in: File.tsx)
+apiKey (found in: config.js)
+
+✨ Added 2 suggestion(s) to .env
+```
+If you run the command again, it will not duplicate additions
+```bash
+# Results
+Environment Variable Report:
+
+Existing Environment Variables:
+✔ VAR_NAME (used in: Home.tsx)
+
+⚠ Suggested Environment Variables:
+secret (found in: File.tsx)
+apiKey (found in: config.js)
+
+No new suggestions to add to .env
 ```
