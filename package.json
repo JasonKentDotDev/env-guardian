@@ -2,6 +2,9 @@
   "name": "@jkdd/env-guardian",
   "version": "1.0.1",
   "description": "A CLI tool to scan and manage environment variables with a focus on security and ease of use.",
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
