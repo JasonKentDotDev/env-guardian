@@ -42,7 +42,8 @@ function looksSensitiveName(name: string): boolean {
   const sensitive = [
     "secret","token","key","password","passwd","pwd",
     "apikey","api","auth","jwt","bearer","client","issuer",
-    "webhook","dsn","vault","salt","private","cert"
+    "webhook","dsn","vault","salt","private","cert", 
+    "database", "connection", "mongo", "s3", "bucket"
   ];
   const words = splitIdentifier(name);
   return words.some(w => sensitive.includes(w));
@@ -133,8 +134,7 @@ export function scanForEnv(dir: string): EnvScanResult {
 
       // If either name or value looks sensitive, suggest it as a candidate
       if (nameSensitive || valueSensitive) {
-        !result[key] ? result[key] = { usage: [], suggested: [] } : result[key].suggested.push(fullPath);
-
+        if (!result[key]) result[key] = { usage: [], suggested: [] };
         if (!result[key].suggested.includes(fullPath)) {
           result[key].suggested.push(fullPath);
         }
