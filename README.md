@@ -32,7 +32,8 @@ npm install -g @jkdd/env-guardian
 
 ```bash
 # Run scan
-env-guardian scan ./src
+env-guardian scan . # scan the current directory
+env-guardian scan ./src # for a specific folder
 
 # Results
 Environment Variable Report:
