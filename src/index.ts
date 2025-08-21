@@ -11,13 +11,13 @@ export type EnvScanResult = Record<string, EnvScanResultEntry>;
 /**
  * Ignored Directories if scanning root folder
  * New suggestions are welcome for various projects
- */ 
+ */
 const IGNORE_DIRS = new Set(["node_modules", ".git", "dist", "build", ".next"]);
 
 function stripComments(src: string) {
   return src
     .replace(/\/\*[\s\S]*?\*\//g, "") // block comments
-    .replace(/\/\/.*$/gm, "");        // line comments
+    .replace(/\/\/.*$/gm, ""); // line comments
 }
 
 /** Helps split variable names to help in identifying sensitive variables
@@ -30,7 +30,7 @@ function splitIdentifier(name: string): string[] {
   return name
     .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
     .split(/[\s_\-]+/)
-    .map(w => w.toLowerCase())
+    .map((w) => w.toLowerCase())
     .filter(Boolean);
 }
 
@@ -40,13 +40,33 @@ function splitIdentifier(name: string): string[] {
  */
 function looksSensitiveName(name: string): boolean {
   const sensitive = [
-    "secret","token","key","password","passwd","pwd",
-    "apikey","api","auth","jwt","bearer","client","issuer",
-    "webhook","dsn","vault","salt","private","cert", 
-    "database", "connection", "mongo", "s3", "bucket"
+    "secret",
+    "token",
+    "key",
+    "password",
+    "passwd",
+    "pwd",
+    "apikey",
+    "api",
+    "auth",
+    "jwt",
+    "bearer",
+    "client",
+    "issuer",
+    "webhook",
+    "dsn",
+    "vault",
+    "salt",
+    "private",
+    "cert",
+    "database",
+    "connection",
+    "mongo",
+    "s3",
+    "bucket",
   ];
   const words = splitIdentifier(name);
-  return words.some(w => sensitive.includes(w));
+  return words.some((w) => sensitive.includes(w));
 }
 
 /**
@@ -70,14 +90,16 @@ function looksLikeSecretLiteral(str: string): boolean {
   // obvious API keys/long tokens
   const longMixed =
     str.length >= 20 &&
-    [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter(r => r.test(str)).length >= 2 &&
+    [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter((r) => r.test(str))
+      .length >= 2 &&
     noSpace;
   if (longMixed) return true;
 
   // URLs that look like config (avoid localhost)
   if (/^https?:\/\//i.test(str) && !/localhost|127\.0\.0\.1/i.test(str)) {
     // require something configy in host or path to avoid asset URLs
-    if (/(api|auth|oauth|db|graphql|issuer|login|token|endpoint)/i.test(str)) return true;
+    if (/(api|auth|oauth|db|graphql|issuer|login|token|endpoint)/i.test(str))
+      return true;
   }
 
   return false;
@@ -112,22 +134,28 @@ export function scanForEnv(dir: string): EnvScanResult {
     for (const m of code.matchAll(/process\.env\.([A-Z0-9_]+)/g)) {
       const varName = m[1];
       if (!result[varName]) result[varName] = { usage: [], suggested: [] };
-        if (!result[varName].usage.includes(fullPath)) {
-          result[varName].usage.push(fullPath);
-        }
+      if (!result[varName].usage.includes(fullPath)) {
+        result[varName].usage.push(fullPath);
+      }
     }
 
     // Candidates: const/let/var name = <initializer>
-    const candidateRegex = /(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([^;]+)/g;
+    const candidateRegex =
+      /(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([^;]+)/g;
     let m: RegExpExecArray | null;
     while ((m = candidateRegex.exec(code))) {
       const key = m[2];
-      const initializer = m[3];
+      const initializer = m[3].trim();
+
+      // Skip if this variable is directly assigned from process.env
+      if (/^process\.env\.[A-Z0-9_]+$/.test(initializer)) {
+        continue;
+      }
 
       // if already used as env, skip suggesting
       if (result[key]?.usage.length) continue;
 
-      // Senditivity check
+      // Sensitivity check
       const nameSensitive = looksSensitiveName(key);
       const literal = extractStringLiteral(initializer);
       const valueSensitive = literal ? looksLikeSecretLiteral(literal) : false;
