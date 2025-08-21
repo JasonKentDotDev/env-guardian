@@ -14,7 +14,7 @@ program
 
 program
   .command("scan")
-  .argument("<dir>", "directory to scan")
+  .argument("[dir]", "directory to scan", ".") // optional arg, defaults to "."
   // Optional value for --to-env; defaults to ".env" if not specified
   .option("--to-env [name]", "create or append suggestions to user defined .env file (default: .env)")
   .action((dir, options) => {
