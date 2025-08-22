@@ -9,14 +9,16 @@ const program = new Command();
 
 program
   .name("@jkdd/env-guardian")
-  .description("Scan your project for environment variable usage and candidates")
+  .description("Scan your project for environment variable usage and candidates.")
   .version("1.0.8");
 
 program
   .command("scan")
   .argument("[dir]", "directory to scan", ".") // optional arg, defaults to "."
-  // Optional value for --to-env; defaults to ".env" if not specified
-  .option("--to-env [name]", "create or append suggestions to user defined .env file (default: .env)")
+  .option(
+    "--to-env [name]",
+    "create or append suggestions to user defined .env file (default: .env)"
+  )
   .action((dir, options) => {
     const results = scanForEnv(dir);
 
@@ -33,29 +35,30 @@ program
         );
       } else if (entry.suggested.length > 0) {
         suggestions.push(
-          chalk.yellow(`${key}`) + 
-            ` (found in: ${entry.suggested.map((f) => path.relative(dir, f)).join(", ")})`
+          chalk.yellow(`${key}`) +
+            ` (found in: ${entry.suggested.map((f: any) => path.relative(dir, f.file || f)).join(", ")})`
         );
       }
     }
 
-    // If there are existing variables detected, this section will print
+    // Print existing usage
     if (existing.length > 0) {
       console.log(chalk.bold.green("Existing Environment Variables:"));
       console.log(existing.join("\n"));
       console.log();
     }
 
-    // If there are suggestions detected, this section will print
+    // Print suggestions
     if (suggestions.length > 0) {
       console.log(chalk.bold.yellow("⚠ Suggested Environment Variables:"));
       console.log(suggestions.join("\n"));
       console.log();
     }
 
+    // Handle --to-env
     if (options.toEnv) {
-      const envFile = typeof options.toEnv === "string" ? options.toEnv : ".env"; // If user just wrote --to-env, file will default to ".env"
-      const envPath = path.join(process.cwd(), envFile); // always root folder and user defined name (.env.local, .env.production, etc.)
+      const envFile = typeof options.toEnv === "string" ? options.toEnv : ".env";
+      const envPath = path.join(process.cwd(), envFile);
 
       let existingContent = "";
       if (fs.existsSync(envPath)) {
@@ -63,16 +66,18 @@ program
       }
 
       const newSuggestions = Object.entries(results)
-        .filter(([key, entry]) => entry.suggested && !existingContent.includes(`${key}=`))
-        .map(([key]) => `${key}=`);
+        .filter(([key, entry]) => entry.suggested.length > 0 && !existingContent.includes(`${key}=`))
+        .map(([key, entry]) => {
+          // if you extended index.ts to include {file, value}, support that here
+          const firstVal = (entry.suggested as any[]).find(s => s.value)?.value;
+          return firstVal ? `${key}=${firstVal}` : `${key}=`;
+        });
 
       if (newSuggestions.length > 0) {
-        // Append new suggestions to the defined .env file
         const envComment = "\n\n# Suggested by env-guardian\n";
         fs.appendFileSync(envPath, envComment + newSuggestions.join("\n") + "\n");
         console.log(chalk.yellow(`✨ Added ${newSuggestions.length} suggestion(s) to ${envFile}`));
       } else {
-        // All suggestions already exist in the file
         console.log(chalk.gray(`No new suggestions to add to ${envFile}`));
       }
     }

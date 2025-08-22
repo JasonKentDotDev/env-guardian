@@ -3,7 +3,7 @@ import path from "path";
 
 export interface EnvScanResultEntry {
   usage: string[];
-  suggested: string[];
+  suggested: { file: string; value?: string }[];
 }
 
 export type EnvScanResult = Record<string, EnvScanResultEntry>;
@@ -163,8 +163,11 @@ export function scanForEnv(dir: string): EnvScanResult {
       // If either name or value looks sensitive, suggest it as a candidate
       if (nameSensitive || valueSensitive) {
         if (!result[key]) result[key] = { usage: [], suggested: [] };
-        if (!result[key].suggested.includes(fullPath)) {
-          result[key].suggested.push(fullPath);
+        
+        const suggestion = { file: fullPath, value: literal ?? undefined };
+        
+        if (!result[key].suggested.some(s => s.file === fullPath)) {
+          result[key].suggested.push(suggestion);
         }
       }
     }
