@@ -38,7 +38,7 @@
   "bugs": {
     "url": "https://github.com/JasonKentDotDev/env-guardian/issues"
   },
-  "homepage": "https://github.com/JasonKentDotDev/env-guardian#readme",
+  "homepage": "https://env-guardian.online/",
   "dependencies": {
     "chalk": "^5.6.0",
     "commander": "^14.0.0"
