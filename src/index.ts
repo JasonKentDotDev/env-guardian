@@ -1,112 +1,155 @@
-import fs from "fs";
-import path from "path";
+import fs from 'fs';
+import path from 'path';
 
 export interface EnvScanResultEntry {
   usage: string[];
-  suggested: { file: string; value?: string }[];
+  suggested: {
+    file: string;
+    value?: string;
+    severity?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  }[];
 }
 
 export type EnvScanResult = Record<string, EnvScanResultEntry>;
 
-/**
- * Ignored Directories if scanning root folder
- * New suggestions are welcome for various projects
- */
-const IGNORE_DIRS = new Set(["node_modules", ".git", "dist", "build", ".next"]);
+const IGNORE_DIRS = new Set(['node_modules', '.git', 'dist', 'build', '.next']);
 
 function stripComments(src: string) {
   return src
-    .replace(/\/\*[\s\S]*?\*\//g, "") // block comments
-    .replace(/\/\/.*$/gm, ""); // line comments
+    .replace(/\/\*[\s\S]*?\*\//g, '') // block comments
+    .replace(/\/\/.*$/gm, ''); // line comments
 }
 
-/** Helps split variable names to help in identifying sensitive variables
- * camelCase   ->  camel case
- * snake_case  ->  snake case
- * kebab-case  ->  kebab case
- */
 function splitIdentifier(name: string): string[] {
-  // Split identifier into words based on common patterns
   return name
-    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
     .split(/[\s_\-]+/)
     .map((w) => w.toLowerCase())
     .filter(Boolean);
 }
 
-/**
- * Check if the variable name contains any sensitive keywords
- * This is a basic heuristic and can be extended based on project needs
- */
+// Language-specific candidate matchers
+const MATCHERS: Record<string, RegExp[]> = {
+  js: [/(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?=;|\n|$)/g],
+  ts: [/(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?:;|\n|$)/g],
+  jsx: [/(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?:;|\n|$)/g],
+  tsx: [/(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?:;|\n|$)/g],
+  py: [/([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(['"`]?.+['"`]?)/g],
+  rb: [/([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+)/g],
+  sh: [/export\s+([A-Z0-9_]+)=([^\n]+)/g],
+  bash: [/export\s+([A-Z0-9_]+)=([^\n]+)/g],
+  env: [/([A-Z0-9_]+)=([^\n]+)/g],
+  json: [/["']([A-Z0-9_]+)["']\s*:\s*["']?(.+?)["']?/g],
+  yml: [/([A-Z0-9_]+):\s*(.+)/gi],
+  yaml: [/([A-Z0-9_]+):\s*(.+)/gi],
+  php: [/\$([A-Za-z0-9_]+)\s*=\s*(.+);/g],
+  java: [/String\s+([A-Za-z0-9_]+)\s*=\s*(.+);/g],
+  kt: [/val\s+([A-Za-z0-9_]+)\s*=\s*(.+)/g],
+  go: [/([A-Za-z0-9_]+)\s*:=\s*(.+)/g],
+  cs: [/var\s+([A-Za-z0-9_]+)\s*=\s*(.+);/g],
+};
+
 function looksSensitiveName(name: string): boolean {
   const sensitive = [
-    "secret",
-    "token",
-    "key",
-    "password",
-    "passwd",
-    "pwd",
-    "apikey",
-    "api",
-    "auth",
-    "jwt",
-    "bearer",
-    "client",
-    "issuer",
-    "webhook",
-    "dsn",
-    "vault",
-    "salt",
-    "private",
-    "cert",
-    "database",
-    "connection",
-    "mongo",
-    "s3",
-    "bucket",
+    'secret',
+    'token',
+    'key',
+    'password',
+    'passwd',
+    'pwd',
+    'apikey',
+    'api',
+    'auth',
+    'jwt',
+    'bearer',
+    'client',
+    'issuer',
+    'webhook',
+    'dsn',
+    'vault',
+    'salt',
+    'private',
+    'cert',
+    'database',
+    'connection',
+    'mongo',
+    's3',
+    'bucket',
   ];
   const words = splitIdentifier(name);
   return words.some((w) => sensitive.includes(w));
 }
 
-/**
- * Only evaluate string literals (quotes must match)
- */
 function extractStringLiteral(raw: string): string | null {
   const t = raw.trim();
   const m = t.match(/^(['"`])(.*)\1$/s);
-  return m ? m[2] : null; // inner content w/o quotes
+  return m ? m[2] : null;
 }
 
-/**
- * Check if a string literal looks like a secret or sensitive value
- */
 function looksLikeSecretLiteral(str: string): boolean {
   const noSpace = !/\s/.test(str);
-
-  // jwt-like
+  // JWT-like
   if (/^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/.test(str)) return true;
-
-  // obvious API keys/long tokens
+  // Long mixed token
   const longMixed =
     str.length >= 20 &&
     [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter((r) => r.test(str))
       .length >= 2 &&
     noSpace;
   if (longMixed) return true;
-
-  // URLs that look like config (avoid localhost)
+  // Config URLs
   if (/^https?:\/\//i.test(str) && !/localhost|127\.0\.0\.1/i.test(str)) {
-    // require something configy in host or path to avoid asset URLs
     if (/(api|auth|oauth|db|graphql|issuer|login|token|endpoint)/i.test(str))
       return true;
   }
-
   return false;
 }
 
+// -------------------- Severity helpers --------------------
+const SUSPICIOUS_NAMES: {
+  regex: RegExp;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+}[] = [
+  { regex: /secret/i, severity: 'MEDIUM' },
+  { regex: /token/i, severity: 'MEDIUM' },
+  { regex: /api[-_]?key/i, severity: 'MEDIUM' },
+  { regex: /password/i, severity: 'MEDIUM' },
+  { regex: /private/i, severity: 'HIGH' },
+  { regex: /client[-_]?secret/i, severity: 'HIGH' },
+  { regex: /^[^\s]{40,}$/, severity: 'CRITICAL' },
+  { regex: /^[^\s]{20,}$/, severity: 'HIGH' },
+  { regex: /jwt/i, severity: 'HIGH' },
+  { regex: /bearer/i, severity: 'HIGH' },
+  { regex: /dsn/i, severity: 'HIGH' },
+  { regex: /connection/i, severity: 'HIGH' },
+  { regex: /mongo/i, severity: 'HIGH' },
+  { regex: /s3/i, severity: 'HIGH' },
+  { regex: /bucket/i, severity: 'HIGH' },
+];
+
+const SUSPICIOUS_VALUES: {
+  regex: RegExp;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+}[] = [
+  { regex: /^[A-Za-z0-9-_]{40,}$/, severity: 'CRITICAL' },
+  { regex: /^[A-Za-z0-9-_]{20,}$/, severity: 'HIGH' },
+  {
+    regex: /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/,
+    severity: 'HIGH',
+  },
+];
+
+// Reduce redundant lines of code by using this function for usage checks...
+function addUsage(m: any, result: EnvScanResult, fullPath: string) {
+  const varName = m[1];
+      if (!result[varName]) result[varName] = { usage: [], suggested: [] };
+      if (!result[varName].usage.includes(fullPath)) result[varName].usage.push(fullPath);
+}
+
 /**
- * Directory to scan for environment variable usage and candidates
+ * Scans the given directory for environment variable usage and suggestions.
+ * @param dir The directory to scan.
+ * @returns An object mapping environment variable names to their usage and suggestions.
  */
 export function scanForEnv(dir: string): EnvScanResult {
   const result: EnvScanResult = {};
@@ -124,50 +167,95 @@ export function scanForEnv(dir: string): EnvScanResult {
       continue;
     }
 
-    if (!/\.(ts|tsx|js|jsx)$/.test(entry.name)) continue;
+    const extMatch = entry.name.match(/\.(\w+)$/);
+    if (!extMatch) continue;
+    let ext = extMatch[1].toLowerCase();
+
+    // map jsx/tsx to js/ts matchers
+    if (ext === "jsx") ext = "js";
+    if (ext === "tsx") ext = "ts";
+
+    if (!MATCHERS[ext]) continue;
 
     const fullPath = path.join(dir, entry.name);
     const content = fs.readFileSync(fullPath, "utf-8");
     const code = stripComments(content);
 
-    // Existing usage: process.env.VAR_NAME
+    // -------------------- USAGE --------------------
+    // JS/TS process.env. usage
     for (const m of code.matchAll(/process\.env\.([A-Z0-9_]+)/g)) {
-      const varName = m[1];
-      if (!result[varName]) result[varName] = { usage: [], suggested: [] };
-      if (!result[varName].usage.includes(fullPath)) {
-        result[varName].usage.push(fullPath);
-      }
+      addUsage(m, result, fullPath);
     }
 
-    // Candidates: const/let/var name = <initializer>
-    const candidateRegex =
-      /(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([^;]+)/g;
-    let m: RegExpExecArray | null;
-    while ((m = candidateRegex.exec(code))) {
-      const key = m[2];
-      const initializer = m[3].trim();
+    // Python os.environ usage
+    for (const m of code.matchAll(/os\.environ\[['"]([A-Z0-9_]+)['"]\]/g)) {
+      addUsage(m, result, fullPath);
+    }
 
-      // Skip if this variable is directly assigned from process.env
-      if (/^process\.env\.[A-Z0-9_]+$/.test(initializer)) {
-        continue;
-      }
+    // Shell $VAR usage
+    for (const m of code.matchAll(/\$([A-Z0-9_]+)/g)) {
+      addUsage(m, result, fullPath);
+    }
 
-      // if already used as env, skip suggesting
-      if (result[key]?.usage.length) continue;
+    // -------------------- SUGGESTIONS --------------------
+    const regexes = MATCHERS[ext];
+    for (const regex of regexes) {
+      let match: RegExpExecArray | null;
+      while ((match = regex.exec(code))) {
+        let key: string | undefined;
+        let initializer: string | undefined;
 
-      // Sensitivity check
-      const nameSensitive = looksSensitiveName(key);
-      const literal = extractStringLiteral(initializer);
-      const valueSensitive = literal ? looksLikeSecretLiteral(literal) : false;
+        // JS/TS/JSX/TSX use different capture groups
+        if (["js","ts"].includes(ext)) {
+          key = match[2];
+          initializer = match[3]?.trim();
+        } else {
+          key = match[1];
+          initializer = match[2]?.trim();
+        }
 
-      // If either name or value looks sensitive, suggest it as a candidate
-      if (nameSensitive || valueSensitive) {
-        if (!result[key]) result[key] = { usage: [], suggested: [] };
-        
-        const suggestion = { file: fullPath, value: literal ?? undefined };
-        
-        if (!result[key].suggested.some(s => s.file === fullPath)) {
-          result[key].suggested.push(suggestion);
+        // Skip if initializer is an env usage
+        if (initializer && /process\.env\.[A-Z0-9_]+/.test(initializer)) {
+          continue;
+        }
+        if (initializer && /os\.environ\[['"][A-Z0-9_]+['"]\]/.test(initializer)) {
+          continue;
+        }
+        if (initializer && /\$[A-Z0-9_]+/.test(initializer)) {
+          continue;
+        }
+
+        if (!key) continue;
+
+        // Determine literal value
+        const literal = initializer ? extractStringLiteral(initializer) : undefined;
+
+        // -------------------- SEVERITY --------------------
+        let severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" | undefined;
+
+        // Name-based severity
+        for (const { regex: r, severity: s } of SUSPICIOUS_NAMES) {
+          if (r.test(key)) severity = s;
+        }
+
+        // Value-based severity
+        if (literal) {
+          for (const { regex: r, severity: s } of SUSPICIOUS_VALUES) {
+            if (r.test(literal)) severity = s;
+          }
+        }
+
+        // Fallback
+        if (!severity && (looksSensitiveName(key) || (literal && looksLikeSecretLiteral(literal)))) {
+          severity = "MEDIUM";
+        }
+
+        if (severity) {
+          if (!result[key]) result[key] = { usage: [], suggested: [] };
+          const suggestion = { file: fullPath, severity };
+          if (!result[key].suggested.some(s => s.file === fullPath)) {
+            result[key].suggested.push(suggestion);
+          }
         }
       }
     }
@@ -175,3 +263,4 @@ export function scanForEnv(dir: string): EnvScanResult {
 
   return result;
 }
+

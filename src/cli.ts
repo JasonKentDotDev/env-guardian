@@ -28,18 +28,36 @@ program
     const suggestions: string[] = [];
 
     for (const [key, entry] of Object.entries(results)) {
-      if (entry.usage.length > 0) {
-        existing.push(
-          chalk.green(`✔ ${key}`) +
-            ` (used in: ${entry.usage.map((f) => path.relative(dir, f)).join(", ")})`
-        );
-      } else if (entry.suggested.length > 0) {
-        suggestions.push(
-          chalk.yellow(`${key}`) +
-            ` (found in: ${entry.suggested.map((f: any) => path.relative(dir, f.file || f)).join(", ")})`
-        );
-      }
+  if (entry.usage.length > 0) {
+    // Existing environment variables
+    existing.push(
+      chalk.green(`✔ ${key}`) +
+        ` (used in: ${entry.usage.map((f) => path.relative(dir, f)).join(", ")})`
+    );
+  } else if (entry.suggested.length > 0) {
+    // Determine the highest severity for this suggestion
+    let maxSeverity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" = "LOW";
+    for (const s of entry.suggested) {
+      if (s.severity === "CRITICAL") maxSeverity = "CRITICAL";
+      else if (s.severity === "HIGH" && maxSeverity !== "CRITICAL") maxSeverity = "HIGH";
+      else if (s.severity === "MEDIUM" && !["CRITICAL", "HIGH"].includes(maxSeverity)) maxSeverity = "MEDIUM";
     }
+
+    const coloredLabel =
+      maxSeverity === "CRITICAL"
+        ? chalk.red(`[${maxSeverity}]`)
+        : maxSeverity === "HIGH"
+        ? chalk.hex("#FFA500")(`[${maxSeverity}]`)
+        : maxSeverity === "MEDIUM"
+        ? chalk.yellow(`[${maxSeverity}]`)
+        : chalk.green(`[${maxSeverity}]`);
+
+    // Only display the variable name and the files where it was found
+    const files = entry.suggested.map(s => path.relative(dir, s.file)).join(", ");
+    suggestions.push(`${coloredLabel} ${chalk.yellow(key)} (found in: ${files})`);
+  }
+}
+
 
     // Print existing usage
     if (existing.length > 0) {
