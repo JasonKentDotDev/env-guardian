@@ -33,12 +33,13 @@ const MATCHERS: Record<string, RegExp[]> = {
   // JS/TS (+ variants mapped)
   js: [/(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?=;|\n|$)/g],
   ts: [/(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?:;|\n|$)/g],
-  jsx: [/(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?:;|\n|$)/g],
-  tsx: [/(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?:;|\n|$)/g],
 
-  // Vue single file components
-  vue: [/(data\s*\(\)\s*{[\s\S]*?return\s*{[\s\S]*?})/g, /(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?:;|\n|$)/g],
-
+  // Vue.js
+  vue: [
+    /(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?:;|\n|$)/g,
+    /([A-Za-z_$][A-Za-z0-9_$]*)\s*:\s*(['"`][^'"`]+['"`]|process\.env\.[A-Z0-9_]+)/g,
+  ],
+  
   // Python
   py: [/([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(['"`]?.+['"`]?)/g],
 
@@ -180,6 +181,13 @@ function addUsage(m: any, result: EnvScanResult, fullPath: string) {
       if (!result[varName].usage.includes(fullPath)) result[varName].usage.push(fullPath);
 }
 
+// Formatter for Vue data to be scanned and output correctly
+function stripVueSections(src: string) {
+  return src
+    .replace(/<template[\s\S]*?<\/template>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "");
+}
+
 /**
  * Scans the given directory for environment variable usage and suggestions.
  * @param dir The directory to scan.
@@ -205,11 +213,20 @@ export function scanForEnv(dir: string): EnvScanResult {
     if (!extMatch) continue;
     let ext = extMatch[1].toLowerCase();
 
+    // Map JSX/TSX to JS/TS
+    if (ext === "jsx") ext = "js";
+    if (ext === "tsx") ext = "ts";
+
+
     if (!MATCHERS[ext]) continue;
 
     const fullPath = path.join(dir, entry.name);
     const content = fs.readFileSync(fullPath, "utf-8");
-    const code = stripComments(content);
+    let code = stripComments(content);
+
+    if (ext === "vue") {
+      code = stripVueSections(code);
+    }
 
     // -------------------- USAGE --------------------
     // JS/TS process.env. usage
