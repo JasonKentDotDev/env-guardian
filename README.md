@@ -7,11 +7,31 @@ Helps you keep sensitive values out of source code and organized into a `.env` f
 
 ## Features
 
-- Detects existing `process.env.*` usage in `.ts`, `.js`, `.tsx`, and `.jsx` files  
+- Detects existing Environment Variable usage in the following file types:
+  - JavaScript (.js & .jsx)
+  - TypeScript (.ts & .tsx)
+  - Vue.js (.vue)
+  - Python (.py)
+  - Ruby (.rb)
+  - Shell Script (.sh)
+  - Bash (.bash)
+  - ENV (.env)
+  - JSON (.json)
+  - Yaml (.yaml & .yml)
+  - PHP (.php)
+  - Java (.java)
+  - Kotlin (.kt)
+  - Go (.go)
+  - C# (.cs)
 - Suggests likely environment variables from hardcoded values (keys, secrets, tokens, passwords, URLs, etc.)  
 - Highlights results:
   - ✅ Existing variables in **green**
   - ⚠ Suggested candidates in **yellow**
+- Priority is categorized by color as well:
+  - [CRITICAL] is in **red**
+  - [HIGH] is in **orange**
+  - [MEDIUM] is in **yellow**
+  - [LOW] is in **green**
 - Optional `.env` integration with `--to-env` option:
   - Appends suggested keys to `.env` with a `# Suggested by env-guardian` marker
   - Option may have user defined filename added as well, `--to-env .env.local`
@@ -43,8 +63,8 @@ Existing Environment Variables:
 ✔ VAR_NAME (used in: Home.tsx)
 
 ⚠ Suggested Environment Variables:
-secret (found in: File.tsx)
-apiKey (found in: config.js)
+[MEDIUM] secret (found in: File.tsx)
+[HIGH] apiKey (found in: config.js)
 ```
 
 ### Options
@@ -62,8 +82,8 @@ Existing Environment Variables:
 ✔ VAR_NAME (used in: Home.tsx)
 
 ⚠ Suggested Environment Variables:
-secret (found in: File.tsx)
-apiKey (found in: config.js)
+[MEDIUM] secret (found in: File.tsx)
+[HIGH] apiKey (found in: config.js)
 
 ✨ Added 2 suggestion(s) to .env # or ex: .env.local
 ```
@@ -78,8 +98,8 @@ Existing Environment Variables:
 ✔ VAR_NAME (used in: Home.tsx)
 
 ⚠ Suggested Environment Variables:
-secret (found in: File.tsx)
-apiKey (found in: config.js)
+[MEDIUM] secret (found in: File.tsx)
+[HIGH] apiKey (found in: config.js)
 
 No new suggestions to add to .env # or ex: .env.local
 ```
