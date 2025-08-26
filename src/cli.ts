@@ -47,7 +47,7 @@ program
       maxSeverity === "CRITICAL"
         ? chalk.red(`[${maxSeverity}]`)
         : maxSeverity === "HIGH"
-        ? chalk.hex("#FFA500")(`[${maxSeverity}]`)
+        ? chalk.hex("#FFA500")(`[${maxSeverity}]`) // #FFA500 is orange
         : maxSeverity === "MEDIUM"
         ? chalk.yellow(`[${maxSeverity}]`)
         : chalk.green(`[${maxSeverity}]`);
