@@ -34,6 +34,7 @@ const MATCHERS: Record<string, RegExp[]> = {
   ts: [/(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?:;|\n|$)/g],
   jsx: [/(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?:;|\n|$)/g],
   tsx: [/(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?:;|\n|$)/g],
+  vue: [/(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?=;|\n|$)/g],
   py: [/([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(['"`]?.+['"`]?)/g],
   rb: [/([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+)/g],
   sh: [/export\s+([A-Z0-9_]+)=([^\n]+)/g],
