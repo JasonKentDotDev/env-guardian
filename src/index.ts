@@ -30,25 +30,58 @@ function splitIdentifier(name: string): string[] {
 
 // Language-specific candidate matchers
 const MATCHERS: Record<string, RegExp[]> = {
+  // JS/TS (+ variants mapped)
   js: [/(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?=;|\n|$)/g],
   ts: [/(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?:;|\n|$)/g],
-  // jsx: [/(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?:;|\n|$)/g],
-  // tsx: [/(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?:;|\n|$)/g],
-  // vue: [/(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?=;|\n|$)/g],
+  jsx: [/(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?:;|\n|$)/g],
+  tsx: [/(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?:;|\n|$)/g],
+
+  // Vue single file components
+  vue: [/(data\s*\(\)\s*{[\s\S]*?return\s*{[\s\S]*?})/g, /(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?:;|\n|$)/g],
+
+  // Python
   py: [/([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(['"`]?.+['"`]?)/g],
+
+  // Ruby
   rb: [/([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+)/g],
-  sh: [/export\s+([A-Z0-9_]+)=([^\n]+)/g],
-  bash: [/export\s+([A-Z0-9_]+)=([^\n]+)/g],
+
+  // Shell scripts
+  sh: [/export\s+([A-Z0-9_]+)=([^\n]+)/g, /([A-Z0-9_]+)=([^\n]+)/g],
+  bash: [/export\s+([A-Z0-9_]+)=([^\n]+)/g, /([A-Z0-9_]+)=([^\n]+)/g],
+
+  // ENV files
   env: [/([A-Z0-9_]+)=([^\n]+)/g],
+
+  // JSON / package.json
   json: [/["']([A-Z0-9_]+)["']\s*:\s*["']?(.+?)["']?/g],
+
+  // YAML
   yml: [/([A-Z0-9_]+):\s*(.+)/gi],
   yaml: [/([A-Z0-9_]+):\s*(.+)/gi],
+
+  // PHP
   php: [/\$([A-Za-z0-9_]+)\s*=\s*(.+);/g],
+
+  // Java / Kotlin / Go / C#
   java: [/String\s+([A-Za-z0-9_]+)\s*=\s*(.+);/g],
   kt: [/val\s+([A-Za-z0-9_]+)\s*=\s*(.+)/g],
   go: [/([A-Za-z0-9_]+)\s*:=\s*(.+)/g],
   cs: [/var\s+([A-Za-z0-9_]+)\s*=\s*(.+);/g],
+
+  // Dockerfile
+  dockerfile: [/ENV\s+([A-Z0-9_]+)\s+(.+)/gi, /ARG\s+([A-Z0-9_]+)=([^\n]+)/gi],
+
+  // NPM config files
+  npmrc: [/\/\/.*:_authToken=(.+)/gi, /_auth\s*=\s*(.+)/gi],
+  yarnrc: [/npmAuthToken:\s*(.+)/gi, /_authToken\s*=\s*(.+)/gi],
+
+  // CI/CD
+  github: [/([A-Z0-9_]+):\s*(.+)/gi],
+  gitlab: [/([A-Z0-9_]+):\s*(.+)/gi],
+  circleci: [/([A-Z0-9_]+):\s*(.+)/gi],
+  azure: [/([A-Z0-9_]+):\s*(.+)/gi],
 };
+
 
 function looksSensitiveName(name: string): boolean {
   const sensitive = [
@@ -171,11 +204,6 @@ export function scanForEnv(dir: string): EnvScanResult {
     const extMatch = entry.name.match(/\.(\w+)$/);
     if (!extMatch) continue;
     let ext = extMatch[1].toLowerCase();
-
-    // map jsx/tsx to js/ts matchers
-    if (ext === "jsx") ext = "js";
-    if (ext === "tsx") ext = "ts";
-    if (ext === "vue") ext = "js";
 
     if (!MATCHERS[ext]) continue;
 
