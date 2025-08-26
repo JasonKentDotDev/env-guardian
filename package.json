@@ -18,11 +18,12 @@
     "start": "ts-node src/cli.ts",
     "clean": "rimraf dist",
     "prepublishOnly": "npm run build",
-    "test": "npm run clean && npm run build && npm link --force"
+    "test": "npm run clean && npm run build && npm link --force",
+    "test:mac": "npm run test && sudo chmod +x /usr/local/bin/env-guardian && sudo chown $(whoami) /usr/local/bin/env-guardian"
   },
   "keywords": [
-    "environment",
-    "variables",
+    "environment variables",
+    "scan",
     "cli",
     "security",
     "management",
