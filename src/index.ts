@@ -140,19 +140,27 @@ function looksLikeSecretLiteral(str: string): boolean {
   return false;
 }
 
-// -------------------- Severity helpers --------------------
 const SUSPICIOUS_NAMES: {
   regex: RegExp;
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 }[] = [
-  { regex: /secret/i, severity: 'MEDIUM' },
-  { regex: /token/i, severity: 'MEDIUM' },
-  { regex: /api[-_]?key/i, severity: 'MEDIUM' },
-  { regex: /password/i, severity: 'MEDIUM' },
+  // --- CRITICAL ---
+  { regex: /^sk_[A-Za-z0-9]/, severity: 'CRITICAL' },                 // Stripe keys
+  { regex: /^[A-Za-z0-9_\-]{32,}$/, severity: 'CRITICAL' },           // long random tokens (JWT, API tokens)
+  { regex: /(PRIVATE|SECRET).*KEY/i, severity: 'CRITICAL' },          // SECRET_KEY, PRIVATE_KEY
+  { regex: /^SECRET.*$/i, severity: 'CRITICAL' },                     // anything starting with SECRET_
+  { regex: /^.*_SECRET.*$/i, severity: 'CRITICAL' },                  // *_SECRET_*
+  { regex: /password/i, severity: 'CRITICAL' },                       // explicit password variables
+  { regex: /secret/i, severity: 'CRITICAL' },                         // anything with "secret"
+  { regex: /^(TOKEN|ACCESS_TOKEN|API_TOKEN|JSON_TOKEN)$/i, severity: 'CRITICAL' }, // bare tokens
+  { regex: /^.*_TOKEN$/i, severity: 'CRITICAL' },                     // *_TOKEN (SECRET_API_TOKEN etc.)
+
+  // --- HIGH ---
+  { regex: /api[-_]?key/i, severity: 'HIGH' },
+  { regex: /token/i, severity: 'HIGH' },      // descriptive tokens (csrfToken, nextPageToken)
   { regex: /private/i, severity: 'HIGH' },
   { regex: /client[-_]?secret/i, severity: 'HIGH' },
-  { regex: /^[^\s]{40,}$/, severity: 'CRITICAL' },
-  { regex: /^[^\s]{20,}$/, severity: 'HIGH' },
+  { regex: /^.{20,}$/, severity: 'HIGH' },    // reasonably long values
   { regex: /jwt/i, severity: 'HIGH' },
   { regex: /bearer/i, severity: 'HIGH' },
   { regex: /dsn/i, severity: 'HIGH' },
@@ -160,7 +168,49 @@ const SUSPICIOUS_NAMES: {
   { regex: /mongo/i, severity: 'HIGH' },
   { regex: /s3/i, severity: 'HIGH' },
   { regex: /bucket/i, severity: 'HIGH' },
+
+  // --- MEDIUM ---
+  { regex: /key/i, severity: 'MEDIUM' },
+  { regex: /id/i, severity: 'MEDIUM' },
+  { regex: /user(name)?/i, severity: 'MEDIUM' },
+  { regex: /account/i, severity: 'MEDIUM' },
+  { regex: /profile/i, severity: 'MEDIUM' },
+  { regex: /email/i, severity: 'MEDIUM' },
+  { regex: /phone/i, severity: 'MEDIUM' },
+  { regex: /project/i, severity: 'MEDIUM' },
+  { regex: /org(anization)?/i, severity: 'MEDIUM' },
+  { regex: /workspace/i, severity: 'MEDIUM' },
+  { regex: /region/i, severity: 'MEDIUM' },
+  { regex: /locale/i, severity: 'MEDIUM' },
+  { regex: /timezone/i, severity: 'MEDIUM' },
+  { regex: /cluster/i, severity: 'MEDIUM' },
+  { regex: /host/i, severity: 'MEDIUM' },
+  { regex: /server/i, severity: 'MEDIUM' },
+  { regex: /instance/i, severity: 'MEDIUM' },
+  { regex: /url/i, severity: 'MEDIUM' },
+  { regex: /uri/i, severity: 'MEDIUM' },
+  { regex: /schema/i, severity: 'MEDIUM' },
+
+  // --- LOW ---
+  { regex: /id/i, severity: 'LOW' },
+  { regex: /port/i, severity: 'LOW' },
+  { regex: /version/i, severity: 'LOW' },
+  { regex: /mode/i, severity: 'LOW' },
+  { regex: /flag/i, severity: 'LOW' },
+  { regex: /color/i, severity: 'LOW' },
+  { regex: /theme/i, severity: 'LOW' },
+  { regex: /lang(uage)?/i, severity: 'LOW' },
+  { regex: /path/i, severity: 'LOW' },
+  { regex: /dir(ectory)?/i, severity: 'LOW' },
+  { regex: /file/i, severity: 'LOW' },
+  { regex: /cache/i, severity: 'LOW' },
+  { regex: /temp/i, severity: 'LOW' },
+  { regex: /timeout/i, severity: 'LOW' },
+  { regex: /retry/i, severity: 'LOW' },
+  { regex: /limit/i, severity: 'LOW' },
+  { regex: /offset/i, severity: 'LOW' },
 ];
+
 
 const SUSPICIOUS_VALUES: {
   regex: RegExp;
@@ -173,6 +223,35 @@ const SUSPICIOUS_VALUES: {
     severity: 'HIGH',
   },
 ];
+
+const SEVERITY_RANK: Record<"LOW" | "MEDIUM" | "HIGH" | "CRITICAL", number> = {
+  LOW: 1,
+  MEDIUM: 2,
+  HIGH: 3,
+  CRITICAL: 4,
+};
+
+function maxSeverity(
+  a?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL",
+  b?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"
+): "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" | undefined {
+  if (!a) return b;
+  if (!b) return a;
+  return SEVERITY_RANK[a] >= SEVERITY_RANK[b] ? a : b;
+}
+
+function getSeverityFromRules(
+  target: string,
+  rules: { regex: RegExp; severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" }[]
+): "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" | undefined {
+  let severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" | undefined;
+  for (const { regex, severity: s } of rules) {
+    if (regex.test(target)) {
+      severity = maxSeverity(severity, s);
+    }
+  }
+  return severity;
+}
 
 // Reduce redundant lines of code by using this function for usage checks...
 function addUsage(m: any, result: EnvScanResult, fullPath: string) {
@@ -280,19 +359,15 @@ export function scanForEnv(dir: string): EnvScanResult {
         // -------------------- SEVERITY --------------------
         let severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" | undefined;
 
-        // Name-based severity
-        for (const { regex: r, severity: s } of SUSPICIOUS_NAMES) {
-          if (r.test(key)) severity = s;
-        }
+        // Check name
+        severity = maxSeverity(severity, getSeverityFromRules(key, SUSPICIOUS_NAMES));
 
-        // Value-based severity
+        // Check value
         if (literal) {
-          for (const { regex: r, severity: s } of SUSPICIOUS_VALUES) {
-            if (r.test(literal)) severity = s;
-          }
+          severity = maxSeverity(severity, getSeverityFromRules(literal, SUSPICIOUS_VALUES));
         }
 
-        // Fallback
+        // Fallback if nothing matched
         if (!severity && (looksSensitiveName(key) || (literal && looksLikeSecretLiteral(literal)))) {
           severity = "MEDIUM";
         }
