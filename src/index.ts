@@ -41,6 +41,7 @@ const MATCHERS: Record<string, RegExp[]> = {
   // JS/TS (+ variants mapped)
   js: [/(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?=;|\n|$)/g],
   ts: [/(const|let|var)\s+([A-Za-z_$][A-Za-z0-9_$]*)\s*=\s*([\s\S]*?)(?:;|\n|$)/g],
+<<<<<<< HEAD
 
   // Vue.js
   vue: [
@@ -49,6 +50,8 @@ const MATCHERS: Record<string, RegExp[]> = {
   ],
   
   // Python
+=======
+>>>>>>> b22804380bbc165724602f89971bafba0adc7cf0
   py: [/([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(['"`]?.+['"`]?)/g],
 
   // Ruby
