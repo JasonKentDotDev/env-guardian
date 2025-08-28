@@ -75,9 +75,9 @@ Existing Environment Variables:
 
 ```bash
 # Run scan with option to create or append suggestions to a .env file
-env-guardian scan ./src --to-env # defaults to .env in root folder
+env-guardian scan ./src --to-env                # defaults to .env in root folder
 # or
-env-guardian scan ./src --to-env .env.local # uses user defined filename in root folder
+env-guardian scan ./src --to-env .env.local     # uses user defined filename in root folder
 
 # Results
 ------------Environment Variable Report------------
