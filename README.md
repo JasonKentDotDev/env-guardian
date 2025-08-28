@@ -25,13 +25,13 @@ Helps you keep sensitive values out of source code and organized into a `.env` f
   - C# (.cs)
 - Suggests likely environment variables from hardcoded values (keys, secrets, tokens, passwords, URLs, etc.)  
 - Highlights results:
-  - ✅ Existing variables in **green**
-  - ⚠ Suggested candidates in **yellow**
+  - ✅ Existing variables in **green** 🟢
+  - ⚠ Suggested candidates in **yellow** 🟡
 - Priority is categorized by color as well:
-  - [CRITICAL] is in **red**
-  - [HIGH] is in **orange**
-  - [MEDIUM] is in **yellow**
-  - [LOW] is in **green**
+  - [CRITICAL] is in **red** 🔴
+  - [HIGH] is in **orange** 🟠
+  - [MEDIUM] is in **yellow** 🟡
+  - [LOW] is in **green** 🟢
 - Optional `.env` integration with `--to-env` option:
   - Appends suggested keys to `.env` with a `# Suggested by env-guardian` marker
   - Option may have user defined filename added as well, `--to-env .env.local`
