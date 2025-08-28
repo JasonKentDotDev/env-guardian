@@ -7,6 +7,7 @@ Helps you keep sensitive values out of source code and organized into a `.env` f
 
 ## Features
 
+- Simple CLI, no config required!
 - Detects existing Environment Variable usage in the following file types:
   - JavaScript (.js & .jsx)
   - TypeScript (.ts & .tsx)
@@ -15,7 +16,6 @@ Helps you keep sensitive values out of source code and organized into a `.env` f
   - Ruby (.rb)
   - Shell Script (.sh)
   - Bash (.bash)
-  - ENV (.env)
   - JSON (.json)
   - Yaml (.yaml & .yml)
   - PHP (.php)
@@ -36,13 +36,16 @@ Helps you keep sensitive values out of source code and organized into a `.env` f
   - Appends suggested keys to `.env` with a `# Suggested by env-guardian` marker
   - Option may have user defined filename added as well, `--to-env .env.local`
   - Any file creation or manipulation will happen in the project's root folder
+- Ignore false positives
+  - Ignore variables or files permanently via `.envscanignore.json`
+  - Reset ignores back to default
 
 ---
 
 ## Installation
 
 ```bash
-npm install -g @jkdd/env-guardian
+npm install -g @jkdd/env-guardian@latest
 ```
 
 ---
@@ -57,7 +60,7 @@ env-guardian scan ./src     # for a specific folder
                             # 'env-guardian scan .' scans current dir
 
 # Results
-Environment Variable Report:
+------------Environment Variable Report------------
 
 Existing Environment Variables:
 ✔ VAR_NAME (used in: Home.tsx)
@@ -68,6 +71,7 @@ Existing Environment Variables:
 ```
 
 ### Options
+#### To Env
 
 ```bash
 # Run scan with option to create or append suggestions to a .env file
@@ -76,7 +80,7 @@ env-guardian scan ./src --to-env # defaults to .env in root folder
 env-guardian scan ./src --to-env .env.local # uses user defined filename in root folder
 
 # Results
-Environment Variable Report:
+------------Environment Variable Report------------
 
 Existing Environment Variables:
 ✔ VAR_NAME (used in: Home.tsx)
@@ -92,7 +96,7 @@ If you run the command again, it will not duplicate additions
 
 ```bash
 # Results
-Environment Variable Report:
+------------Environment Variable Report------------
 
 Existing Environment Variables:
 ✔ VAR_NAME (used in: Home.tsx)
@@ -102,4 +106,34 @@ Existing Environment Variables:
 [HIGH] apiKey (found in: config.js)
 
 No new suggestions to add to .env # or ex: .env.local
+```
+
+#### Ignore false positives
+
+```bash
+# Run ignore command
+env-guardian ignore variableName
+
+# You may ignore multiple variables at a time if desired
+env-guardian ignore variableName variableName2
+
+# You can also ignore entire files, insert as many as you wish at a time
+env-guardian ignore-files path/to/file.js
+```
+
+These commands will add the desired variables/files to an ignore list (`.envscanignore.json`) found in the root directory.
+
+```bash
+# .envscanignore.json
+{
+  "ignore": {
+    "variables": [
+      "variableName", 
+      "variableName2"
+    ],
+    "files": [
+      "path/to/file.js"
+    ]
+  }
+}
 ```
