@@ -316,7 +316,7 @@ export function scanForEnv(dir: string): EnvScanResult {
         const initializer = (["js", "ts"].includes(mappedExt) ? m[3] : m[2])?.trim();
         if (!key || (initializer && /(process\.env|os\.environ|\$[A-Z0-9_]+)/.test(initializer))) continue;
 
-        const literal = initializer ? extractStringLiteral(initializer) : undefined;
+        const literal = initializer ? extractStringLiteral(initializer) ?? undefined : undefined;
 
         let severity = getSeverityFromRules(key, SUSPICIOUS_NAMES);
         if (literal) severity = maxSeverity(severity, getSeverityFromRules(literal, SUSPICIOUS_VALUES));
@@ -325,7 +325,11 @@ export function scanForEnv(dir: string): EnvScanResult {
         if (severity) {
           result[key] ??= { usage: [], suggested: [] };
           if (!result[key].suggested.some((s) => s.file === fullPath)) {
-            result[key].suggested.push({ file: fullPath, severity });
+            result[key].suggested.push({ 
+              file: fullPath, 
+              value: literal,
+              severity 
+            });
           }
         }
       }

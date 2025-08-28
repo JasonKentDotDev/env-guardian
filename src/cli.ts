@@ -183,12 +183,23 @@ program
             );
           })
           .map(([variable, entry]) => {
-            const firstVal = (entry.suggested as any[]).find((s) => s.value)?.value;
-            return firstVal ? `${variable}=${firstVal}` : `${variable}=`;
+            const values = entry.suggested
+              .map((v) => v.value)
+              .filter(Boolean);
+            
+            if (values.length > 0) {
+              return `\n${variable}=${values[0]}`;
+            }
+            return `${variable}="Error grabbing value. Fill me in yourself!"`;
           });
 
         if (newSuggestions.length > 0) {
-          const envComment = '\n\n# Suggested by env-guardian\n';
+          const envComment = `\n\n
+# Suggested by env-guardian
+# Next Steps include: Renaming envs to their correct format and adding values the scanner didn't manage to grab.
+# For more info on correct formatting of Environment Variables for your language, 
+# visit: https://env-guardian.online/docs/env-naming-conventions
+`;
           fs.appendFileSync(envPath, envComment + newSuggestions.join('\n') + '\n');
           console.log(chalk.yellow(`✨ Added ${newSuggestions.length} suggestion(s) to ${envFile}`));
         } else {
