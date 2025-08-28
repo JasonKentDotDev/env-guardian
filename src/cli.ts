@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { scanForEnv } from './index';
 import fs from 'fs';
 import path from 'path';
 import readline from "readline";
+import { scanForEnv } from './index';
+
+const pkgPath = path.resolve("package.json");
+const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
 
 interface IgnoreConfig {
   variables: string[];
@@ -55,9 +58,51 @@ function saveIgnoreConfig() {
 const program = new Command();
 
 program
-  .name('@jkdd/env-guardian')
-  .description('Scan your project for environment variable usage and candidates.')
-  .version('1.1.0');
+  .name(pkg.name)
+  .description(pkg.description)
+  .version(pkg.version)
+  .helpOption(false)
+  .option("-h, --help", "Show help for available commands", () => {
+    console.log(`
+    Helpers:
+      $ env-guardian --version, -V, -v                      ## Displays current env-guardian version
+      $ env-guardian --help, -h                             ## Help. It's self explanatory.
+      $ env-guardian --info, -i                             ## Displays information about env-guardian
+
+    Commands:
+      $ env-guardian scan                                   ## Scans current directory
+      $ env-guardian scan ./dir                             ## Scans a given directory
+      $ env-guardian scan ./dir --to-env                    ## Adds Suggestions to default .env
+      $ env-guardian scan ./dir --to-env .env.local         ## Adds Suggestions to given .env.*
+      $ env-guardian ignore variable                        ## Adds variable(s) to an ignore list
+      $ env-guardian ignore-files path/to/file.js           ## Adds file(s) to an ignore list
+      $ env-guardian ignore-list                            ## Lists all ignored variables and files
+      $ env-guardian reset-ignore                           ## Resets ignore list to ignore nothing
+
+    Tips:
+      • Use 'scan' to analyze your project and suggest sensitive vars
+      • Use '--to-env' flag to add suggested sensitive vars to a .env file
+      • Use 'ignore' or 'ignore-files' to suppress false positives
+      • Run 'reset-ignore' to restore a clean ignore config
+    `);
+    process.exit(0);
+  })
+  .option("-v", "Show version", () => {
+    console.log(pkg.version);
+    process.exit(0);
+  })
+  .option("-i, --info", "Show program information", () => {
+    console.log(`
+      Name: ${pkg.name}
+      Author: ${pkg.author}
+      Version: ${pkg.version}
+      Description: ${pkg.description}
+      License: ${pkg.license}
+      GitHub Repo: ${pkg.repository.url}
+      Documentation: ${pkg.homepage}
+    `);
+    process.exit(0);
+  });
 
 program
   .command('scan')
