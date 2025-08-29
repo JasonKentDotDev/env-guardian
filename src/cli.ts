@@ -57,7 +57,7 @@ const program = new Command();
 program
   .name('@jkdd/env-guardian')
   .description('A simple CLI program that helps you catch potential senitive values before they are pushed up to your repo publicly.')
-  .version('1.1.13', '-v, --version', 'Output the current version')
+  .version('1.1.14', '-v, --version', 'Output the current version')
   .helpOption(false)
   .option('-h, --help', 'Show help for available commands', () => {
     console.log(`
@@ -88,7 +88,7 @@ program
     console.log(`
       Name: Env-Guardian
       Author: Jason Kent <jasonkent.dev@gmail.com>
-      Version: 1.1.13
+      Version: 1.1.14
       Description: 'A simple CLI program that helps you catch potential senitive values before they are pushed up to your repo publicly.'
       License: 'MIT'
       GitHub Repo: 'https://github.com/JasonKentDotDev/env-guardian'
