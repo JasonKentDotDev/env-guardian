@@ -198,7 +198,7 @@ program
 # Suggested by env-guardian
 # Next Steps include: Renaming envs to their correct format and adding values the scanner didn't manage to grab.
 # For more info on correct formatting of Environment Variables for your language, 
-# visit: https://env-guardian.online/docs/env-naming-conventions
+# visit: https://env-guardian.online/docs/env-naming-conventions/env-variables
 `;
           fs.appendFileSync(envPath, envComment + newSuggestions.join('\n') + '\n');
           console.log(chalk.yellow(`✨ Added ${newSuggestions.length} suggestion(s) to ${envFile}`));
