@@ -220,7 +220,7 @@ program
     for (const v of variablesToIgnore) {
       if (!ignoreConfig.variables.includes(v)) {
         ignoreConfig.variables.push(v);
-        console.log(chalk.green(`✔ Now ignoring variable ${v}`));
+        console.log(chalk.green(`✔ Now ignoring ${v}`));
       } else {
         console.log(chalk.gray(`${v} is already ignored`));
       }
