@@ -6,9 +6,6 @@ import path from 'path';
 import readline from "readline";
 import { scanForEnv } from './index';
 
-const pkgPath = path.resolve("./package.json");
-const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
-
 interface IgnoreConfig {
   variables: string[];
   files: string[];
@@ -58,14 +55,14 @@ function saveIgnoreConfig() {
 const program = new Command();
 
 program
-  .name(pkg.name)
-  .description(pkg.description)
-  // .version('1.1.5')
+  .name('@jkdd/env-guardian')
+  .description('A simple CLI program that helps you catch potential senitive values before they are pushed up to your repo publicly.')
+  .version('1.1.13', '-v, --version', 'Output the current version')
   .helpOption(false)
-  .option("-h, --help", "Show help for available commands", () => {
+  .option('-h, --help', 'Show help for available commands', () => {
     console.log(`
     Helpers:
-      $ env-guardian --version, -V, -v                      ## Displays current env-guardian version
+      $ env-guardian --version, -v                          ## Displays current env-guardian version
       $ env-guardian --help, -h                             ## Help. It's self explanatory.
       $ env-guardian --info, -i                             ## Displays information about env-guardian
 
@@ -87,19 +84,15 @@ program
     `);
     process.exit(0);
   })
-  // .option("-v", "Show version", () => {
-  //   console.log(pkg.version);
-  //   process.exit(0);
-  // })
   .option("-i, --info", "Show program information", () => {
     console.log(`
-      Name: ${pkg.name}
-      Author: ${pkg.author}
-      Version: ${pkg.version}
-      Description: ${pkg.description}
-      License: ${pkg.license}
-      GitHub Repo: ${pkg.repository.url}
-      Documentation: ${pkg.homepage}
+      Name: Env-Guardian
+      Author: Jason Kent <jasonkent.dev@gmail.com>
+      Version: 1.1.13
+      Description: 'A simple CLI program that helps you catch potential senitive values before they are pushed up to your repo publicly.'
+      License: 'MIT'
+      GitHub Repo: 'https://github.com/JasonKentDotDev/env-guardian'
+      Documentation: 'https://env-guardian.online/'
     `);
     process.exit(0);
   });
@@ -296,4 +289,4 @@ program
     }
   });
 
-program.parse();
+program.parse(process.argv);
