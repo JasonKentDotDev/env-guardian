@@ -6,7 +6,7 @@ import path from 'path';
 import readline from "readline";
 import { scanForEnv } from './index';
 
-const pkgPath = path.resolve("package.json");
+const pkgPath = path.resolve("./package.json");
 const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
 
 interface IgnoreConfig {
