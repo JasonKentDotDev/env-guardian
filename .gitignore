@@ -14,3 +14,7 @@ yarn-error.log*
 
 # Testing files
 test/
+
+# Environment files
+.env
+.env.*

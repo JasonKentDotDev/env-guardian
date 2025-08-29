@@ -7,22 +7,48 @@ Helps you keep sensitive values out of source code and organized into a `.env` f
 
 ## Features
 
-- Detects existing `process.env.*` usage in `.ts`, `.js`, `.tsx`, and `.jsx` files  
+- Simple CLI, no config required!
+- Detects existing Environment Variable usage in the following file types:
+  - JavaScript (.js & .jsx)
+  - TypeScript (.ts & .tsx)
+  - Vue.js (.vue)
+  - Python (.py)
+  - Ruby (.rb)
+  - Shell Script (.sh)
+  - Bash (.bash)
+  - JSON (.json)
+  - Yaml (.yaml & .yml)
+  - PHP (.php)
+  - Java (.java)
+  - Kotlin (.kt)
+  - Go (.go)
+  - C# (.cs)
+  - Dockerfile
+  - NPM config files (npmrc, yarnrc)
+  - CI/CD (github, gitlab, circleci, azure)
 - Suggests likely environment variables from hardcoded values (keys, secrets, tokens, passwords, URLs, etc.)  
 - Highlights results:
-  - ✅ Existing variables in **green**
-  - ⚠ Suggested candidates in **yellow**
+  - ✅ Existing variables in **green** 🟢
+  - ⚠ Suggested candidates in **yellow** 🟡
+- Priority is categorized by color as well:
+  - [CRITICAL] is in **red** 🔴
+  - [HIGH] is in **orange** 🟠
+  - [MEDIUM] is in **yellow** 🟡
+  - [LOW] is in **green** 🟢
 - Optional `.env` integration with `--to-env` option:
   - Appends suggested keys to `.env` with a `# Suggested by env-guardian` marker
   - Option may have user defined filename added as well, `--to-env .env.local`
   - Any file creation or manipulation will happen in the project's root folder
+- Ignore false positives
+  - Ignore variables or files permanently via `.envscanignore.json`
+  - Reset ignores back to default
 
 ---
 
 ## Installation
 
 ```bash
-npm install -g @jkdd/env-guardian
+npm install -g @jkdd/env-guardian@latest
 ```
 
 ---
@@ -37,33 +63,34 @@ env-guardian scan ./src     # for a specific folder
                             # 'env-guardian scan .' scans current dir
 
 # Results
-Environment Variable Report:
+------------Environment Variable Report------------
 
 Existing Environment Variables:
 ✔ VAR_NAME (used in: Home.tsx)
 
 ⚠ Suggested Environment Variables:
-secret (found in: File.tsx)
-apiKey (found in: config.js)
+[MEDIUM] secret (found in: File.tsx)
+[HIGH] apiKey (found in: config.js)
 ```
 
 ### Options
+#### To Env
 
 ```bash
 # Run scan with option to create or append suggestions to a .env file
-env-guardian scan ./src --to-env # defaults to .env in root folder
+env-guardian scan ./src --to-env                # defaults to .env in root folder
 # or
-env-guardian scan ./src --to-env .env.local # uses user defined filename in root folder
+env-guardian scan ./src --to-env .env.local     # uses user defined filename in root folder
 
 # Results
-Environment Variable Report:
+------------Environment Variable Report------------
 
 Existing Environment Variables:
 ✔ VAR_NAME (used in: Home.tsx)
 
 ⚠ Suggested Environment Variables:
-secret (found in: File.tsx)
-apiKey (found in: config.js)
+[MEDIUM] secret (found in: File.tsx)
+[HIGH] apiKey (found in: config.js)
 
 ✨ Added 2 suggestion(s) to .env # or ex: .env.local
 ```
@@ -72,14 +99,44 @@ If you run the command again, it will not duplicate additions
 
 ```bash
 # Results
-Environment Variable Report:
+------------Environment Variable Report------------
 
 Existing Environment Variables:
 ✔ VAR_NAME (used in: Home.tsx)
 
 ⚠ Suggested Environment Variables:
-secret (found in: File.tsx)
-apiKey (found in: config.js)
+[MEDIUM] secret (found in: File.tsx)
+[HIGH] apiKey (found in: config.js)
 
 No new suggestions to add to .env # or ex: .env.local
+```
+
+#### Ignore false positives
+
+```bash
+# Run ignore command
+env-guardian ignore variableName
+
+# You may ignore multiple variables at a time if desired
+env-guardian ignore variableName variableName2
+
+# You can also ignore entire files, insert as many as you wish at a time
+env-guardian ignore-files path/to/file.js
+```
+
+These commands will add the desired variables/files to an ignore list (`.envscanignore.json`) found in the root directory.
+
+```bash
+# .envscanignore.json
+{
+  "ignore": {
+    "variables": [
+      "variableName", 
+      "variableName2"
+    ],
+    "files": [
+      "path/to/file.js"
+    ]
+  }
+}
 ```
