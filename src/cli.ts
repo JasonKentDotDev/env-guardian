@@ -60,7 +60,7 @@ const program = new Command();
 program
   .name(pkg.name)
   .description(pkg.description)
-  .version(pkg.version)
+  // .version('1.1.5')
   .helpOption(false)
   .option("-h, --help", "Show help for available commands", () => {
     console.log(`
@@ -87,10 +87,10 @@ program
     `);
     process.exit(0);
   })
-  .option("-v", "Show version", () => {
-    console.log(pkg.version);
-    process.exit(0);
-  })
+  // .option("-v", "Show version", () => {
+  //   console.log(pkg.version);
+  //   process.exit(0);
+  // })
   .option("-i, --info", "Show program information", () => {
     console.log(`
       Name: ${pkg.name}
