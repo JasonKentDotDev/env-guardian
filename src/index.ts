@@ -58,9 +58,6 @@ const MATCHERS: Record<string, RegExp[]> = {
   sh: [/export\s+([A-Z0-9_]+)=([^\n]+)/g, /([A-Z0-9_]+)=([^\n]+)/g],
   bash: [/export\s+([A-Z0-9_]+)=([^\n]+)/g, /([A-Z0-9_]+)=([^\n]+)/g],
 
-  // ENV files
-  env: [/([A-Z0-9_]+)=([^\n]+)/g],
-
   // JSON / package.json
   json: [/["']([A-Z0-9_]+)["']\s*:\s*["']?(.+?)["']?/g],
 
