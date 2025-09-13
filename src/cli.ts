@@ -299,6 +299,45 @@ program
   });
 
 program
+  .command("unignore [variables...]")
+  .description("Stop ignoring one or more environment variables")
+  .action((variables: string[]) => {
+    const variablesToUnignore = variables.map((v) => v.trim()).filter(Boolean);
+
+    for (const v of variablesToUnignore) {
+      if (ignoreConfig.variables.includes(v)) {
+        ignoreConfig.variables = ignoreConfig.variables.filter((item) => item !== v);
+        console.log(chalk.green(`✔ No longer ignoring ${v}`));
+      } else {
+        console.log(chalk.gray(`${v} was not in the ignore list`));
+      }
+    }
+
+    saveIgnoreConfig();
+  });
+
+program
+  .command("unignore-files [files...]")
+  .description("Stop ignoring ALL variables in one or more files")
+  .action((files: string[]) => {
+    const filesToUnignore = files.map((f) =>
+      path.relative(process.cwd(), path.resolve(f))
+    );
+
+    for (const f of filesToUnignore) {
+      if (ignoreConfig.files.includes(f)) {
+        ignoreConfig.files = ignoreConfig.files.filter((item) => item !== f);
+        console.log(chalk.green(`✔ No longer ignoring ALL variables in ${f}`));
+      } else {
+        console.log(chalk.gray(`File ${f} was not in the ignore list`));
+      }
+    }
+
+    saveIgnoreConfig();
+  });
+
+
+program
   .command("reset-ignore")
   .description("Reset ignore config to default values")
   .option("-f, --force", "skip confirmation")
