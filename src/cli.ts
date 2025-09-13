@@ -118,11 +118,12 @@ program
   })
   .option("--valid-env", "Display list of valid filenames for secret files.", () => {
     console.log(`${chalk.cyan(`
-      Valid Filename conventions:
-    `)}
-    ${chalk.yellow(`
+      ✔ Valid Filename conventions:
+    `)} ${chalk.yellow(`
       ${Array.from(VALID_ENV_FILES).join(`\n      `)}
-    `)}`);
+    `)}
+      For more info about .env filenames, check out: ${chalk.blueBright('https://env-guardian.online/docs/env-naming-conventions/env-files')}
+    `);
     process.exit(0);
   });
 
@@ -191,8 +192,8 @@ program
 
         if (!VALID_ENV_FILES.has(envFile)) {
           console.log(chalk.red(`
-❌ Invalid env file name: ${envFile}.
-Only the following are allowed: ${Array.from(VALID_ENV_FILES).join(", ")}
+  ❌ Invalid env file name: ${envFile}.
+  Only the following are allowed: ${Array.from(VALID_ENV_FILES).join(", ")}
           `))
         } else {
           let existingContent = '';
