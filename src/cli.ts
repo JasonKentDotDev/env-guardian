@@ -93,6 +93,7 @@ program
       $ env-guardian ignore-files path/to/file.js           ## Adds file(s) to an ignore list
       $ env-guardian ignore-list                            ## Lists all ignored variables and files
       $ env-guardian reset-ignore                           ## Resets ignore list to ignore nothing
+      $ env-guardian reset-ignore -f, --force               ## Skips confirmation to reset ignore list
 
     Tips:
       • Use 'scan' to analyze your project and suggest sensitive vars
