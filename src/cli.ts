@@ -83,6 +83,7 @@ program
       $ env-guardian --version, -v                          ## Displays current env-guardian version
       $ env-guardian --help, -h                             ## Help. It's self explanatory.
       $ env-guardian --info, -i                             ## Displays information about env-guardian
+      $ env-guardian --valid-env                            ## Displays the list of valid .env file names
 
     Commands:
       $ env-guardian scan                                   ## Scans current directory
@@ -113,6 +114,15 @@ program
       GitHub Repo: 'https://github.com/JasonKentDotDev/env-guardian'
       Documentation: 'https://env-guardian.online/'
     `);
+    process.exit(0);
+  })
+  .option("--valid-env", "Display list of valid filenames for secret files.", () => {
+    console.log(`${chalk.cyan(`
+      Valid Filename conventions:
+    `)}
+    ${chalk.yellow(`
+      ${Array.from(VALID_ENV_FILES).join(`\n      `)}
+    `)}`);
     process.exit(0);
   });
 
