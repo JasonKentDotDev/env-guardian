@@ -52,6 +52,24 @@ function saveIgnoreConfig() {
   console.log(chalk.blue(`✨ Updated ignore config at ${ignoreConfigPath}`));
 }
 
+const VALID_ENV_FILES = new Set([
+  ".env",
+  ".env.local",
+  ".env.development",
+  ".env.production",
+  ".env.test",
+  ".bashrc",
+  ".zshrc",
+  "config.json",
+  "config.yaml",
+  "config.yml",
+  "secrets.json",
+  "application.yaml",
+  "application.yml",
+  "application.properties",
+  "appsettings.json"
+]);
+
 const program = new Command();
 
 program
@@ -160,43 +178,50 @@ program
         const envFile = typeof options.toEnv === 'string' ? options.toEnv : '.env';
         const envPath = path.join(process.cwd(), envFile);
 
-        let existingContent = '';
-        if (fs.existsSync(envPath)) {
-          existingContent = fs.readFileSync(envPath, 'utf-8');
-        }
+        if (!VALID_ENV_FILES.has(envFile)) {
+          console.log(chalk.red(`
+❌ Invalid env file name: ${envFile}.
+Only the following are allowed: ${Array.from(VALID_ENV_FILES).join(", ")}
+          `))
+        } else {
+          let existingContent = '';
+          if (fs.existsSync(envPath)) {
+            existingContent = fs.readFileSync(envPath, 'utf-8');
+          }
 
-        const newSuggestions = Object.entries(results)
-          .filter(([variable, entry]) => {
-            const allFiles = entry.suggested.map((s) => s.file);
-            return (
-              entry.suggested.length > 0 &&
-              !existingContent.includes(`${variable}=`) &&
-              !isIgnored(variable, '') &&
-              !allFiles.some((f) => isIgnored('', f))
-            );
-          })
-          .map(([variable, entry]) => {
-            const values = entry.suggested
-              .map((v) => v.value)
-              .filter(Boolean);
-            
-            if (values.length > 0) {
-              return `\n${variable}=${values[0]}`;
-            }
-            return `${variable}="Error grabbing value. Fill me in yourself!"`;
-          });
+          const newSuggestions = Object.entries(results)
+            .filter(([variable, entry]) => {
+              const allFiles = entry.suggested.map((s) => s.file);
+              return (
+                entry.suggested.length > 0 &&
+                !existingContent.includes(`${variable}=`) &&
+                !isIgnored(variable, '') &&
+                !allFiles.some((f) => isIgnored('', f))
+              );
+            })
+            .map(([variable, entry]) => {
+              const values = entry.suggested
+                .map((v) => v.value)
+                .filter(Boolean);
+              
+              if (values.length > 0) {
+                return `\n${variable}=${values[0]}`;
+              }
+              return `${variable}="Error grabbing value. Fill me in yourself!"`;
+            });
 
-        if (newSuggestions.length > 0) {
-          const envComment = `\n\n
+          if (newSuggestions.length > 0) {
+            const envComment = `\n\n
 # Suggested by env-guardian
 # Next Steps include: Renaming envs to their correct format and adding values the scanner didn't manage to grab.
 # For more info on correct formatting of Environment Variables for your language, 
 # visit: https://env-guardian.online/docs/env-naming-conventions/env-variables
 `;
-          fs.appendFileSync(envPath, envComment + newSuggestions.join('\n') + '\n');
-          console.log(chalk.yellow(`✨ Added ${newSuggestions.length} suggestion(s) to ${envFile}`));
-        } else {
-          console.log(chalk.gray(`No new suggestions to add to ${envFile}`));
+            fs.appendFileSync(envPath, envComment + newSuggestions.join('\n') + '\n');
+            console.log(chalk.yellow(`✨ Added ${newSuggestions.length} suggestion(s) to ${envFile}`));
+          } else {
+            console.log(chalk.gray(`No new suggestions to add to ${envFile}`));
+          }
         }
       }
     } catch (e) {
@@ -273,8 +298,8 @@ program
       };
       ignoreConfig = defaultConfig;
       saveIgnoreConfig();
-      console.log(chalk.blueBright("🔄 ALL rules in `.envscanignore.json` have been reset"));
-      console.log(chalk.blueBright("✅ Reset complete"));
+      console.log(chalk.cyan("🔄 ALL rules in `.envscanignore.json` have been reset"));
+      console.log(chalk.cyan("✅ Reset complete"));
     };
 
     if (options.force) {
