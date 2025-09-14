@@ -20,7 +20,7 @@
     "prepublishOnly": "npm run build",
     "test": "npm run clean && npm run build && npm link --force",
     "test:mac": "npm run test && sudo chmod +x /usr/local/bin/env-guardian && sudo chown $(whoami) /usr/local/bin/env-guardian",
-    "publish-to-npm": "env-guardian reset-ignore --force && npm publish"
+    "publish-to-npm": "env-guardian reset-ignore --force && env-guardian reset-priority && npm publish"
   },
   "keywords": [
     "environment variables",
