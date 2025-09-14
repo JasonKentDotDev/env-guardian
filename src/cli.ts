@@ -51,6 +51,82 @@ const SEVERITY_ORDER: Record<"LOW" | "MEDIUM" | "HIGH" | "CRITICAL", number> = {
   CRITICAL: 4,
 };
 
+const VALID_ENV_FILES = new Set([
+  ".env",
+  ".env.local",
+  ".env.development",
+  ".env.production",
+  ".env.test",
+  ".bashrc",
+  ".zshrc",
+  "config.json",
+  "config.yaml",
+  "config.yml",
+  "secrets.json",
+  "application.yaml",
+  "application.yml",
+  "application.properties",
+  "appsettings.json"
+]);
+
+program
+  .name('@jkdd/env-guardian')
+  .description('A simple CLI program that helps you catch potential senitive values before they are pushed up to your repo publicly.')
+  .version('1.2.1', '-v, --version', 'Output the current version')
+  .helpOption(false)
+  .option('-h, --help', 'Show help for available commands', () => {
+    console.log(`
+    Helpers:
+      $ env-guardian --version, -v                          ## Displays current env-guardian version
+      $ env-guardian --help, -h                             ## Help. It's self explanatory.
+      $ env-guardian --info, -i                             ## Displays information about env-guardian
+      $ env-guardian --valid-env                            ## Displays the list of valid .env file names
+
+    Commands:
+      $ env-guardian scan                                   ## Scans current directory
+      $ env-guardian scan ./dir                             ## Scans a given directory
+      $ env-guardian scan ./dir --to-env                    ## Adds Suggestions to default .env
+      $ env-guardian scan ./dir --to-env .env.local         ## Adds Suggestions to given .env.*
+      $ env-guardian set-priority level                     ## Scan results only display set priority and above
+      $ env-guardian reset-priority                         ## Resets scan results to display all
+      $ env-guardian ignore variable                        ## Adds variable(s) to an ignore list
+      $ env-guardian ignore-files path/to/file.js           ## Adds file(s) to an ignore list
+      $ env-guardian ignore-list                            ## Lists all ignored variables and files
+      $ env-guardian reset-ignore                           ## Resets ignore list to ignore nothing
+      $ env-guardian reset-ignore -f, --force               ## Skips confirmation to reset ignore list
+
+    Tips:
+      • Use 'scan' to analyze your project and suggest sensitive vars
+      • Use '--to-env' flag to add suggested sensitive vars to a .env file
+      • Use 'set-priority' to only display scan results from set priority and above
+      • Use 'ignore' or 'ignore-files' to suppress false positives
+      • Run 'reset-ignore' to restore a clean ignore config
+    `);
+    process.exit(0);
+  })
+  .option("-i, --info", "Show program information", () => {
+    console.log(`
+      Name: Env-Guardian
+      Author: Jason Kent <jasonkent.dev@gmail.com>
+      Version: 1.2.1
+      Description: 'A simple CLI program that helps you catch potential senitive values before they are pushed up to your repo publicly.'
+      License: 'MIT'
+      GitHub Repo: 'https://github.com/JasonKentDotDev/env-guardian'
+      Documentation: 'https://env-guardian.online/'
+    `);
+    process.exit(0);
+  })
+  .option("--valid-env", "Display list of valid filenames for secret files.", () => {
+    console.log(`${chalk.cyan(`
+      ✔ Valid Filename conventions:
+    `)} ${chalk.yellow(`
+      ${Array.from(VALID_ENV_FILES).join(`\n      `)}
+    `)}
+      For more info about .env filenames, check out: ${chalk.blueBright('https://env-guardian.online/docs/env-naming-conventions/env-files')}
+    `);
+    process.exit(0);
+  });
+
 // ---------- Commands ----------
 program
   .command("scan [dir]")
