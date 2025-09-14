@@ -114,6 +114,8 @@ program
       $ env-guardian scan ./dir                             ## Scans a given directory
       $ env-guardian scan ./dir --to-env                    ## Adds Suggestions to default .env
       $ env-guardian scan ./dir --to-env .env.local         ## Adds Suggestions to given .env.*
+      $ env-guardian set-priority level                     ## Scan results only display set priority and above
+      $ env-guardian reset-priority                         ## Resets scan results to display all
       $ env-guardian ignore variable                        ## Adds variable(s) to an ignore list
       $ env-guardian ignore-files path/to/file.js           ## Adds file(s) to an ignore list
       $ env-guardian ignore-list                            ## Lists all ignored variables and files
@@ -123,6 +125,7 @@ program
     Tips:
       • Use 'scan' to analyze your project and suggest sensitive vars
       • Use '--to-env' flag to add suggested sensitive vars to a .env file
+      • Use 'set-priority' to only display scan results from set priority and above
       • Use 'ignore' or 'ignore-files' to suppress false positives
       • Run 'reset-ignore' to restore a clean ignore config
     `);
