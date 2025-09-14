@@ -48,7 +48,7 @@ Helps you keep sensitive values out of source code and organized into a `.env` f
 ## Installation
 
 ```bash
-npm install -g @jkdd/env-guardian@latest
+npm install @jkdd/env-guardian
 ```
 
 ---
@@ -144,4 +144,23 @@ These commands will add the desired variables/files to an ignore list (`.envscan
     ]
   }
 }
+```
+
+#### Set priority level for `scan`
+
+```bash
+# Run set-priority command
+env-guardian set-priority high
+
+# Results
+✔ Priority set to [HIGH]
+```
+
+You may reset `scan` results by running the `reset-priority` command.
+
+```bash
+env-guardian reset-priority
+
+# Results
+🔄 Priority filter reset. All severities will be shown on scan.
 ```
