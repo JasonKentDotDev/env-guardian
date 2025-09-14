@@ -40,7 +40,7 @@ Helps you keep sensitive values out of source code and organized into a `.env` f
   - Option may have user defined filename added as well, `--to-env .env.local`
   - Any file creation or manipulation will happen in the project's root folder
 - Ignore false positives
-  - Ignore variables or files permanently via `.envscanignore.json`
+  - Ignore variables or files permanently via `.envscanconfig.json`
   - Reset ignores back to default
 
 ---
@@ -129,10 +129,10 @@ env-guardian ignore variableName variableName2
 env-guardian ignore-files path/to/file.js
 ```
 
-These commands will add the desired variables/files to an ignore list (`.envscanignore.json`) found in the root directory.
+These commands will add the desired variables/files to an ignore list (`.envscanconfig.json`) found in the root directory.
 
 ```bash
-# .envscanignore.json
+# .envscanconfig.json
 {
   "ignore": {
     "variables": [
