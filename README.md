@@ -40,7 +40,7 @@ Helps you keep sensitive values out of source code and organized into a `.env` f
   - Option may have user defined filename added as well, `--to-env .env.local`
   - Any file creation or manipulation will happen in the project's root folder
 - Ignore false positives
-  - Ignore variables or files permanently via `.envscanignore.json`
+  - Ignore variables or files permanently via `.envscanconfig.json`
   - Reset ignores back to default
 
 ---
@@ -48,7 +48,7 @@ Helps you keep sensitive values out of source code and organized into a `.env` f
 ## Installation
 
 ```bash
-npm install -g @jkdd/env-guardian@latest
+npm install @jkdd/env-guardian
 ```
 
 ---
@@ -111,6 +111,11 @@ Existing Environment Variables:
 No new suggestions to add to .env # or ex: .env.local
 ```
 
+**Important note:** Environment variables and secrets go into very specific 
+files depending on what language or framework you are using. For a full list 
+of compatible file types and naming conventions, please read the documentation 
+found [here](https://env-guardian.online/docs/env-naming-conventions/env-files).
+
 #### Ignore false positives
 
 ```bash
@@ -124,10 +129,10 @@ env-guardian ignore variableName variableName2
 env-guardian ignore-files path/to/file.js
 ```
 
-These commands will add the desired variables/files to an ignore list (`.envscanignore.json`) found in the root directory.
+These commands will add the desired variables/files to an ignore list (`.envscanconfig.json`) found in the root directory.
 
 ```bash
-# .envscanignore.json
+# .envscanconfig.json
 {
   "ignore": {
     "variables": [
@@ -139,4 +144,24 @@ These commands will add the desired variables/files to an ignore list (`.envscan
     ]
   }
 }
+```
+
+#### Set priority level for `scan`
+
+```bash
+# Run set-priority command
+env-guardian set-priority high
+
+# Results
+✔ Priority set to [HIGH]
+```
+
+You may reset `scan` results by running the `reset-priority` command.
+
+```bash
+# Run reset-priority command
+env-guardian reset-priority
+
+# Results
+🔄 Priority filter reset. All severities will be shown on scan.
 ```
