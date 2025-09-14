@@ -159,6 +159,7 @@ env-guardian set-priority high
 You may reset `scan` results by running the `reset-priority` command.
 
 ```bash
+# Run reset-priority command
 env-guardian reset-priority
 
 # Results
