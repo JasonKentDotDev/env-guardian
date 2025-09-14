@@ -306,7 +306,7 @@ program
 
     scanConfig.priority = upper as any;
     saveScanConfig();
-    console.log(chalk.green(`✔ Priority set to ${upper}`));
+    console.log(chalk.green(`✔ Priority set to [${upper}]`));
   });
 
 program
@@ -315,7 +315,7 @@ program
   .action(() => {
     scanConfig.priority = undefined;
     saveScanConfig();
-    console.log(chalk.cyan("🔄 Priority filter reset. All severities will be shown."));
+    console.log(chalk.cyan("🔄 Priority filter reset. All severities will be shown on scan."));
   });
 
 program
