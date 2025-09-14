@@ -11,7 +11,24 @@ interface IgnoreConfig {
   files: string[];
 }
 
+interface ScanConfig {
+  ignore: IgnoreConfig;
+  priority?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+}
+
 let ignoreConfig: IgnoreConfig = { variables: [], files: [] };
+
+let scanConfig: ScanConfig = { ignore: IgnoreConfig, priority?: undefined };
+
+function saveScanConfig() {
+  fs.writeFileSync(".envscanconfig.json", JSON.stringify(scanConfig, null, 2));
+};
+
+function loadScanConfig() {
+  if (fs.existsSync(".envscanconfig.json")) {
+    scanConfig = JSON.parse(fs.readFileSync(".envscanconfig.json", "utf-8"));
+  }
+};
 
 try {
   const ignoreConfigPath = path.resolve('.envscanignore.json');
@@ -25,7 +42,7 @@ try {
   }
 } catch (e) {
   console.warn('Could not load ignore config:', e);
-}
+};
 
 function isIgnored(variable: string, file: string): boolean {
   if (variable && ignoreConfig.variables.includes(variable)) {
@@ -40,7 +57,7 @@ function isIgnored(variable: string, file: string): boolean {
   }
 
   return false;
-}
+};
 
 
 function saveIgnoreConfig() {
@@ -50,7 +67,14 @@ function saveIgnoreConfig() {
     JSON.stringify({ ignore: ignoreConfig }, null, 2)
   );
   console.log(chalk.blue(`✨ Updated ignore config at ${ignoreConfigPath}`));
-}
+};
+
+const SEVERITY_ORDER = {
+  LOW: 1,
+  MEDIUM: 2,
+  HIGH: 3,
+  CRITICAL: 4,
+};
 
 const VALID_ENV_FILES = new Set([
   ".env",
@@ -141,6 +165,25 @@ program
       const suggestions: string[] = [];
 
       for (const [variable, entry] of Object.entries(results)) {
+        // Find the highest severity for suggestions
+        let maxSeverity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" | undefined;
+
+        if (entry.suggested.length > 0) {
+          maxSeverity = entry.suggested.reduce((acc, s) => {
+            if (!s.severity) return acc;
+            return SEVERITY_ORDER[s.severity] > SEVERITY_ORDER[acc] ? s.severity : acc;
+          }, "LOW" as "LOW" | "MEDIUM" | "HIGH" | "CRITICAL");
+        }
+
+        // Apply filter if set
+        if (
+          scanConfig.priority &&
+          maxSeverity &&
+          SEVERITY_ORDER[maxSeverity] < SEVERITY_ORDER[scanConfig.priority]
+        ) {
+          continue; // skip this result
+        }
+
         if (entry.usage.length > 0) {
           existing.push(
             chalk.green(`✔ ${variable}`) +
@@ -239,6 +282,37 @@ program
     } catch (e) {
       console.error(chalk.red('❌ [ERROR] scan failed:'), e);
     }
+  });
+
+program
+  .command("set-priority <level>")
+  .description("Set minimum severity level to display (low, medium, high, critical)")
+  .action((level: string) => {
+    const upper = level.toUpperCase();
+    const valid: ("LOW" | "MEDIUM" | "HIGH" | "CRITICAL")[] = [
+      "LOW",
+      "MEDIUM",
+      "HIGH",
+      "CRITICAL",
+    ];
+
+    if (!valid.includes(upper as any)) {
+      console.log(chalk.red(`❌ Invalid priority "${level}". Use one of: low, medium, high, critical`));
+      process.exit(1);
+    }
+
+    scanConfig.priority = upper as any;
+    saveScanConfig();
+    console.log(chalk.green(`✔ Priority set to ${upper}`));
+  });
+
+program
+  .command("reset-priority")
+  .description("Reset severity filter to show all results")
+  .action(() => {
+    scanConfig.priority = undefined;
+    saveScanConfig();
+    console.log(chalk.cyan("🔄 Priority filter reset. All severities will be shown."));
   });
 
 program
