@@ -72,7 +72,7 @@ const VALID_ENV_FILES = new Set([
 program
   .name('@jkdd/env-guardian')
   .description('A simple CLI program that helps you catch potential senitive values before they are pushed up to your repo publicly.')
-  .version('1.2.1', '-v, --version', 'Output the current version')
+  .version('1.2.2', '-v, --version', 'Output the current version')
   .helpOption(false)
   .option('-h, --help', 'Show help for available commands', () => {
     console.log(`
@@ -108,7 +108,7 @@ program
     console.log(`
       Name: Env-Guardian
       Author: Jason Kent <jasonkent.dev@gmail.com>
-      Version: 1.2.1
+      Version: 1.2.2
       Description: 'A simple CLI program that helps you catch potential senitive values before they are pushed up to your repo publicly.'
       License: 'MIT'
       GitHub Repo: 'https://github.com/JasonKentDotDev/env-guardian'
@@ -131,75 +131,140 @@ program
 program
   .command("scan [dir]")
   .description("Scan project for environment variables")
-  .action((dir = ".") => {
-    const results: EnvScanResult = scanForEnv(path.resolve(dir));
+  .option(
+    "--to-env [name]",
+    "create or append suggestions to user defined .env file (default: .env)"
+  )
+  .action((dir = ".", options) => {
+    try {
+      const results: EnvScanResult = scanForEnv(path.resolve(dir));
 
-    const existing: string[] = [];
-    const suggestions: string[] = [];
+      const existing: string[] = [];
+      const suggestions: string[] = [];
 
-    for (const [key, entry] of Object.entries(results)) {
-      // Ignore rules
-      if (isIgnored(key, entry.usage[0] ?? entry.suggested[0]?.file ?? "")) continue;
+      for (const [key, entry] of Object.entries(results)) {
+        // Ignore rules
+        if (isIgnored(key, entry.usage[0] ?? entry.suggested[0]?.file ?? "")) continue;
 
-      // Handle USAGE (always LOW severity)
-      if (entry.usage.length > 0) {
-        if (
-          scanConfig.priority &&
-          SEVERITY_ORDER["LOW"] < SEVERITY_ORDER[scanConfig.priority]
-        ) {
-          continue;
+        // Handle USAGE (always LOW severity)
+        if (entry.usage.length > 0) {
+          if (
+            scanConfig.priority &&
+            SEVERITY_ORDER["LOW"] < SEVERITY_ORDER[scanConfig.priority]
+          ) {
+            continue;
+          }
+          existing.push(
+            chalk.green(`✔ ${key}`) +
+              ` (used in: ${entry.usage.map((f) => path.relative(dir, f)).join(", ")})`
+          );
         }
-        existing.push(
-          chalk.green(`✔ ${key}`) +
-            ` (used in: ${entry.usage.map((f) => path.relative(dir, f)).join(", ")})`
-        );
+
+        // Handle SUGGESTIONS
+        if (entry.suggested.length > 0) {
+          let maxSeverity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" = "LOW";
+          for (const s of entry.suggested) {
+            if (s.severity && SEVERITY_ORDER[s.severity] > SEVERITY_ORDER[maxSeverity]) {
+              maxSeverity = s.severity;
+            }
+          }
+
+          if (
+            scanConfig.priority &&
+            SEVERITY_ORDER[maxSeverity] < SEVERITY_ORDER[scanConfig.priority]
+          ) {
+            continue;
+          }
+
+          const coloredLabel =
+            maxSeverity === "CRITICAL"
+              ? chalk.red(`[${maxSeverity}]`)
+              : maxSeverity === "HIGH"
+              ? chalk.hex("#FFA500")(`[${maxSeverity}]`)
+              : maxSeverity === "MEDIUM"
+              ? chalk.yellow(`[${maxSeverity}]`)
+              : chalk.green(`[${maxSeverity}]`);
+
+          suggestions.push(
+            `${coloredLabel} ${chalk.yellow(key)} (found in: ${entry.suggested
+              .map((s) => path.relative(dir, s.file))
+              .join(", ")})`
+          );
+        }
       }
 
-      // Handle SUGGESTIONS
-      if (entry.suggested.length > 0) {
-        let maxSeverity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL" = "LOW";
-        for (const s of entry.suggested) {
-          if (s.severity && SEVERITY_ORDER[s.severity] > SEVERITY_ORDER[maxSeverity]) {
-            maxSeverity = s.severity;
+      console.log(chalk.bold("\n\n------------Environment Variable Report------------"));
+
+      if (existing.length > 0) {
+        console.log(chalk.green("\nExisting Environment Variables:"));
+        existing.forEach((e) => console.log(e));
+      }
+
+      if (suggestions.length > 0) {
+        console.log(chalk.yellow("\n⚠ Suggested Environment Variables:"));
+        suggestions.forEach((s) => console.log(s));
+      } else {
+        console.log(chalk.green("\n🎉 Congrats! You have no suggestions detected! 🎉\n"));
+      }
+
+      // Handle --to-env
+      if (options.toEnv) {
+        const envFile = typeof options.toEnv === "string" ? options.toEnv : ".env";
+        const envPath = path.join(process.cwd(), envFile);
+
+        if (!VALID_ENV_FILES.has(envFile)) {
+          console.log(
+            chalk.red(`
+              \n❌ Invalid env file name: ${envFile}.
+              Only the following are allowed: ${Array.from(VALID_ENV_FILES).join(", ")}`
+            )
+          );
+        } else {
+          let existingContent = "";
+          if (fs.existsSync(envPath)) {
+            existingContent = fs.readFileSync(envPath, "utf-8");
+          }
+
+          const newSuggestions = Object.entries(results)
+            .filter(([variable, entry]) => {
+              const allFiles = entry.suggested.map((s) => s.file);
+              return (
+                entry.suggested.length > 0 &&
+                !existingContent.includes(`${variable}=`) &&
+                !isIgnored(variable, "") &&
+                !allFiles.some((f) => isIgnored("", f))
+              );
+            })
+            .map(([variable, entry]) => {
+              const values = entry.suggested.map((v) => v.value).filter(Boolean);
+
+              if (values.length > 0) {
+                return `\n${variable}=${values[0]}`;
+              }
+              return `${variable}="Error grabbing value. Fill me in yourself!"`;
+            });
+
+          if (newSuggestions.length > 0) {
+            const envComment = `\n\n
+# Suggested by env-guardian
+# Next Steps include: Renaming envs to their correct format and adding values the scanner didn't manage to grab.
+# For more info on correct formatting of Environment Variables for your language, 
+# visit: https://env-guardian.online/docs/env-naming-conventions/env-variables
+`;
+            fs.appendFileSync(
+              envPath,
+              envComment + newSuggestions.join("\n") + "\n"
+            );
+            console.log(
+              chalk.yellow(`\n✨ Added ${newSuggestions.length} suggestion(s) to ${envFile}`)
+            );
+          } else {
+            console.log(chalk.gray(`\nNo new suggestions to add to ${envFile}`));
           }
         }
-
-        if (
-          scanConfig.priority &&
-          SEVERITY_ORDER[maxSeverity] < SEVERITY_ORDER[scanConfig.priority]
-        ) {
-          continue;
-        }
-
-        const coloredLabel =
-          maxSeverity === "CRITICAL"
-            ? chalk.red(`[${maxSeverity}]`)
-            : maxSeverity === "HIGH"
-            ? chalk.hex("#FFA500")(`[${maxSeverity}]`)
-            : maxSeverity === "MEDIUM"
-            ? chalk.yellow(`[${maxSeverity}]`)
-            : chalk.green(`[${maxSeverity}]`);
-
-        suggestions.push(
-          `${coloredLabel} ${chalk.yellow(key)} (found in: ${entry.suggested
-            .map((s) => path.relative(dir, s.file))
-            .join(", ")})`
-        );
       }
-    }
-
-    console.log(chalk.bold("\n\n------------Environment Variable Report------------"));
-
-    if (existing.length > 0) {
-      console.log(chalk.green("\nExisting Environment Variables:"));
-      existing.forEach((e) => console.log(e));
-    }
-
-    if (suggestions.length > 0) {
-      console.log(chalk.yellow("\n⚠ Suggested Environment Variables:"));
-      suggestions.forEach((s) => console.log(s));
-    } else {
-      console.log(chalk.green("\n🎉 Congrats! You have no suggestions detected! 🎉\n"))
+    } catch (e) {
+      console.error(chalk.red("❌ [ERROR] scan failed:"), e);
     }
   });
 
