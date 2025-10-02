@@ -73,7 +73,7 @@ const VALID_ENV_FILES = new Set([
 program
   .name('@jkdd/env-guardian')
   .description('A simple CLI program that helps you catch potential senitive values before they are pushed up to your repo publicly.')
-  .version('1.2.2', '-v, --version', 'Output the current version')
+  .version('1.2.3', '-v, --version', 'Output the current version')
   .helpOption(false)
   .option('-h, --help', 'Show help for available commands', () => {
     console.log(`
@@ -109,7 +109,7 @@ program
     console.log(`
       Name: Env-Guardian
       Author: Jason Kent <jasonkent.dev@gmail.com>
-      Version: 1.2.2
+      Version: 1.2.3
       Description: 'A simple CLI program that helps you catch potential senitive values before they are pushed up to your repo publicly.'
       License: 'MIT'
       GitHub Repo: 'https://github.com/JasonKentDotDev/env-guardian'
