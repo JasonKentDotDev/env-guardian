@@ -380,7 +380,7 @@ program
       | "CRITICAL";
     if (!["LOW", "MEDIUM", "HIGH", "CRITICAL"].includes(severityLevel)) {
       console.error(
-        chalk.red("❌ Invalid priority. Must be one of: low, medium, high, or critical")
+        chalk.red("❌ Invalid priority. Valid priorities: low, medium, high, or critical")
       );
       process.exit(1);
     }
