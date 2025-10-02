@@ -17,6 +17,7 @@ interface ScanConfig {
 }
 
 const CONFIG_FILE = ".envscanconfig.json";
+const SITE_URL = "https://env-guardian.online";
 
 // ---------- Load/Save Config ----------
 let scanConfig: ScanConfig = { ignore: { variables: [], files: [] } };
@@ -112,7 +113,7 @@ program
       Description: 'A simple CLI program that helps you catch potential senitive values before they are pushed up to your repo publicly.'
       License: 'MIT'
       GitHub Repo: 'https://github.com/JasonKentDotDev/env-guardian'
-      Documentation: 'https://env-guardian.online/'
+      Documentation: '${SITE_URL}'
     `);
     process.exit(0);
   })
@@ -122,7 +123,7 @@ program
     `)} ${chalk.yellow(`
       ${Array.from(VALID_ENV_FILES).join(`\n      `)}
     `)}
-      For more info about .env filenames, check out: ${chalk.blueBright('https://env-guardian.online/docs/env-naming-conventions/env-files')}
+      For more info about .env filenames, check out: ${chalk.blueBright(`${SITE_URL}/docs/env-naming-conventions/env-files`)}
     `);
     process.exit(0);
   });
@@ -249,7 +250,7 @@ program
 # Suggested by env-guardian
 # Next Steps include: Renaming envs to their correct format and adding values the scanner didn't manage to grab.
 # For more info on correct formatting of Environment Variables for your language, 
-# visit: https://env-guardian.online/docs/env-naming-conventions/env-variables
+# visit: ${SITE_URL}/docs/env-naming-conventions/env-variables
 `;
             fs.appendFileSync(
               envPath,
