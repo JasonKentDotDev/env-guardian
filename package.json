@@ -46,8 +46,9 @@
     "commander": "^14.0.0"
   },
   "devDependencies": {
+    "@types/node": "^25.6.0",
+    "rimraf": "^5.0.10",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.2",
-    "rimraf": "^5.0.10"
+    "typescript": "^5.9.2"
   }
 }
